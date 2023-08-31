@@ -1,0 +1,18 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+  Slub\LisztBibliography\:
+    resource: '../Classes/*'
+    exclude: '../Classes/Domain/Model/*'
+  Slub\LisztBibliography\Classes\Controller\BibliographyController:
+    tags:
+      - backend.controller
+  Slub\LisztBibliography\Command\IndexCommand:
+    tags:
+      -
+        name: console.command
+        command: 'liszt-bibliography:index'
+        description: 'Create elasticsearch index from zotero bibliography'
+        schedulable: true

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="EXT:publisher_db/Resources/Private/Language/locallang" date="2022-12-19T13:20:31Z" product-name="publisher_db">
+		<header/>
+		<body>
+			<trans-unit id="listing_title" resname="tx_publisherdb_domain_model_publishermikroitem">
+				<source>Bibliographie-Listing</source>
+			</trans-unit>
+			<trans-unit id="listing_description" resname="tx_publisherdb_domain_model_publishermikroitem">
+				<source>Eine Auflistung aller Einträge der Liszt-Bibliographie</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

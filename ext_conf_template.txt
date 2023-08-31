@@ -1,0 +1,14 @@
+# cat=Elasticsearch; type=string; label=LLL:EXT:publisher_db/Resources/Private/Language/Labels.xml:config.elasticIndexName
+elasticIndexName = zotero
+# cat=Elasticsearch; type=string; label=LLL:EXT:publisher_db/Resources/Private/Language/Labels.xml:config.elasticLocaleIndexName
+elasticLocaleIndexName = zoterolocales
+# cat=Elasticsearch; type=int; label=LLL:EXT:publisher_db/Resources/Private/Language/Labels.xml:config.elasticBulkSize
+elasticBulkSize = 20
+# cat=Zotero; type=string; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroApiKey
+zoteroApiKey = xgC1nXqyHO2eYOq2M7Dj7V5q
+# cat=Zotero; type=int; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroGroupId
+zoteroGroupId = 5080468
+# cat=Zotero; type=int; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroUserId
+zoteroUserId = 7071210
+# cat=Zotero; type=int; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroBulkSize
+zoteroBulkSize = 50

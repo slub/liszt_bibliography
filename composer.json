@@ -1,0 +1,25 @@
+{
+    "name": "slub/liszt-bibliography",
+    "description": "Manages an elasticsearch index obtained from a zotero library and other data sources, displays a bibliography listing",
+    "type": "typo3-cms-extension",
+    "license": [
+        "GPL-2.0-or-later"
+    ],
+    "require": {
+        "typo3/cms-core": "^11.5",
+        "typo3/cms-fluid-styled-content": "^11.5",
+        "slub/liszt-common": "dev-main",
+        "dikastes/zotero-api": "dev-master",
+        "illuminate/collections": "^8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Slub\\LisztBibliography\\": "Classes/"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "liszt_bibliography"
+        }
+    }
+}
