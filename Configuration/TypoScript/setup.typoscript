@@ -23,3 +23,15 @@ tt_content {
 }
 
 page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
+
+
+plugin.tx_liszt_common {
+    settings {
+        searchBarSelectItems {
+            1:{
+                label = Literatur
+                href = #
+            }
+        }
+    }
+}
