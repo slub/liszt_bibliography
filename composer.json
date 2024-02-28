@@ -6,8 +6,8 @@
         "GPL-2.0-or-later"
     ],
     "require": {
-        "typo3/cms-core": "^12.5",
-        "typo3/cms-fluid-styled-content": "^12.5",
+        "typo3/cms-core": "^12",
+        "typo3/cms-fluid-styled-content": "^12",
         "slub/liszt-common": "dev-7-upgrade-to-typo3-v12",
         "dikastes/zotero-api": "dev-master",
         "illuminate/collections": "^10"
