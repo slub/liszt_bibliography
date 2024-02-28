@@ -8,7 +8,7 @@
     "require": {
         "typo3/cms-core": "^11.5",
         "typo3/cms-fluid-styled-content": "^11.5",
-        "slub/liszt-common": "dev-main",
+        "slub/liszt-common": "dev-7-upgrade-to-typo3-v12",
         "dikastes/zotero-api": "dev-master",
         "illuminate/collections": "^8"
     },
