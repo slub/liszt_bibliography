@@ -6,11 +6,11 @@
         "GPL-2.0-or-later"
     ],
     "require": {
-        "typo3/cms-core": "^11.5",
-        "typo3/cms-fluid-styled-content": "^11.5",
+        "typo3/cms-core": "^12.5",
+        "typo3/cms-fluid-styled-content": "^12.5",
         "slub/liszt-common": "dev-7-upgrade-to-typo3-v12",
         "dikastes/zotero-api": "dev-master",
-        "illuminate/collections": "^8"
+        "illuminate/collections": "^10"
     },
     "autoload": {
         "psr-4": {
