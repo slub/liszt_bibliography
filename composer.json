@@ -12,6 +12,11 @@
         "dikastes/zotero-api": "dev-master",
         "illuminate/collections": "^10"
     },
+    "require-dev": {
+        "phpstan/phpstan": "^1",
+        "phpunit/phpunit": "^9",
+        "typo3/testing-framework": "^7"
+    },
     "autoload": {
         "psr-4": {
             "Slub\\LisztBibliography\\": "Classes/"
@@ -20,6 +25,33 @@
     "extra": {
         "typo3/cms": {
             "extension-key": "liszt_bibliography"
+        }
+    },
+    "scripts": {
+        "ci": [ "@ci:install", "@ci:php", "@ci:tests" ],
+        "ci:php": [ "@ci:php:stan" ],
+        "ci:php:stan": [ "Build/Scripts/runTests.sh -s phpstan -b docker" ],
+        "ci:tests": [ "@ci:tests:unit", "@ci:tests:functional" ],
+        "ci:tests:unit": [ "Build/Scripts/runTests.sh -s unit -b docker" ],
+        "ci:tests:functional": [ "Build/Scripts/runTests.sh -s functional -b docker" ],
+        "ci:install": [ "Build/Scripts/runTests.sh -s composerInstall -b docker" ]
+    },
+    "config": {
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        },
+        "vendor-dir": "vendor",
+        "bin-dir": "bin"
+    },
+    "repositories": {
+        "api": {
+            "type": "git",
+            "url": "https://github.com/dikastes/zotero-api"
+        },
+        "common": {
+            "type": "git",
+            "url": "https://github.com/dikastes/liszt_common"
         }
     }
 }
