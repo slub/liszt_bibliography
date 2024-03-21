@@ -34,6 +34,8 @@ class IndexCommand extends Command
     protected SymfonyStyle $io;
     protected ZoteroApi $localeApi;
     protected array $locales;
+    protected int $bulkSize;
+    protected int $total;
 
     protected function configure(): void
     {
@@ -53,11 +55,37 @@ class IndexCommand extends Command
     {
         $this->io->section('Fetching Bibliography Data');
         $this->fetchBibliography();
+        $this->io->section('Complementing export formats');
+        $this->complementExportFormats();
         $this->io->section('Committing Bibliography Data');
         $this->commitBibliography();
         $this->io->section('Committing Locale Data');
         $this->commitLocales();
         return 0;
+    }
+
+    protected function complementExportFormats(): void
+    {
+        $this->io->progressStart($this->total);
+        $collection = new Collection($response->getBody());
+        $this->bibliographyItems = $collection->pluck('data');
+
+        $cursor = $this->bulkSize;
+        while ($cursor < $this->total) {
+            $this->io->progressAdvance($this->bulkSize);
+            $response = $this->bibApi->
+                group($this->extConf['zoteroGroupId'])->
+                items()->
+                top()->
+                start($cursor)->
+                limit($this->bulkSize)->
+                send();
+            $collection = new Collection($response->getBody());
+            $this->bibliographyItems = $this->bibliographyItems->
+                concat($collection->pluck('data'));
+            $cursor += $this->bulkSize;
+        }
+        $this->io->progressFinish();
     }
 
     protected function fetchBibliography(): void
@@ -69,34 +97,34 @@ class IndexCommand extends Command
         $this->locales = $response->getBody()['locales'];
 
         // get bulk size and total size
-        $bulkSize = (int) $this->extConf['zoteroBulkSize'];
+        $this->bulkSize = (int) $this->extConf['zoteroBulkSize'];
         $response = $this->bibApi->
             group($this->extConf['zoteroGroupId'])->
             items()->
             top()->
             limit(1)->
             send();
-        $total = (int) $response->getHeaders()['Total-Results'][0];
+        $this->total = (int) $response->getHeaders()['Total-Results'][0];
 
         // fetch bibliography items bulkwise
-        $this->io->progressStart($total);
+        $this->io->progressStart($this->total);
         $collection = new Collection($response->getBody());
         $this->bibliographyItems = $collection->pluck('data');
 
-        $cursor = $bulkSize;
-        while ($cursor < $total) {
-            $this->io->progressAdvance($bulkSize);
+        $cursor = $this->bulkSize;
+        while ($cursor < $this->total) {
+            $this->io->progressAdvance($this->bulkSize);
             $response = $this->bibApi->
                 group($this->extConf['zoteroGroupId'])->
                 items()->
                 top()->
                 start($cursor)->
-                limit($bulkSize)->
+                limit($this->bulkSize)->
                 send();
             $collection = new Collection($response->getBody());
             $this->bibliographyItems = $this->bibliographyItems->
                 concat($collection->pluck('data'));
-            $cursor += $bulkSize;
+            $cursor += $this->bulkSize;
         }
         $this->io->progressFinish();
     }
