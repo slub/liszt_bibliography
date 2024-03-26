@@ -1,7 +1,7 @@
 The Bibliography Module of the Liszt Portal
 ===========================================
 
-[![TYPO3 11](https://img.shields.io/badge/TYPO3-11-orange.svg)](https://get.typo3.org/version/11)
+[![TYPO3 13](https://img.shields.io/badge/TYPO3-13-orange.svg)](https://get.typo3.org/version/13)
 [![CC-BY](https://img.shields.io/github/license/dikastes/liszt_bibliography)](https://github.com/dikastes/liszt_bibliography/blob/main/LICENSE)
 
 This module fetches bibliographical entries from the Zotero API and stores them in a search engine index.
