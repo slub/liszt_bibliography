@@ -139,9 +139,7 @@ class BibliographyController {
     }
 
     static renderDoc(doc, locales) {
-        const itemType = locales.itemTypes[doc.itemType];
-        const renderedCreators = doc.creators ? BibliographyController.renderCreators(doc.creators, locales) : '';
-        return `<li class="list-group-item"> <h4> ${doc.title} <small class="pull-right"> ${itemType} </small> </h4> ${renderedCreators} </li>`;
+        return `<li class="list-group-item">${doc.localizedCitations['de-DE']}</li>`;
     }
 
     static renderCreators(creators, locales) {
