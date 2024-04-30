@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Slub\LisztBibliography\Command;
 
-use Elasticsearch\Client;
+use Elastic\Elasticsearch\Client;
 use Hedii\ZoteroApi\ZoteroApi;
 use Illuminate\Support\Collection;
 use Psr\Http\Message\ServerRequestInterface;
@@ -94,7 +94,7 @@ class IndexCommand extends Command
     {
         $this->io->progressStart($this->total);
         $this->dataSets = $this->bibliographyItems->
-            map(function($bibliographyItem) { 
+            map(function($bibliographyItem) {
                 $this->io->progressAdvance();
                 return self::buildDataSet($bibliographyItem, $this->localizedCitations, $this->teiDataSets);
             });
@@ -196,7 +196,8 @@ class IndexCommand extends Command
             } catch (\Exception $e) {
                 $this->io->newline(2);
                 $this->io->caution($e->getMessage());
-                $this->io->note('Stay calm. This is normal for Zotero\'s API. I\'m trying it again.');
+
+                $this->io->note('Stay calm. This is normal for Zotero\'s API. I\'m trying it again. fetchCitationLocale');
             }
             $this->io->progressAdvance($this->bulkSize);
         }
@@ -241,7 +242,7 @@ class IndexCommand extends Command
             } catch (\Exception $e) {
                 $this->io->newline(2);
                 $this->io->caution($e->getMessage());
-                $this->io->note('Stay calm. This is normal for Zotero\'s API. I\'m trying it again.');
+                $this->io->note('Stay calm. This is normal for Zotero\'s API. I\'m trying it again. fetchTeiData');
             }
             $this->io->progressAdvance($this->bulkSize);
         }
@@ -254,20 +255,36 @@ class IndexCommand extends Command
         $this->io->text('Committing the ' . $index . ' index');
 
         $this->io->progressStart(count($this->bibliographyItems));
-        if ($this->client->indices()->exists(['index' => $index])) {
-            $this->client->indices()->delete(['index' => $index]);
-            $this->client->indices()->create(['index' => $index]);
+
+        /* For more recent versions of Elasticsearch (8.x),
+       a call to $client->indices()->exists($indexParams) no longer returns a boolean,
+       it instead returns an instance of Elastic\Elasticsearch\Response\Elasticsearch.
+       This response is actually a 200 HTTP response if the index exists, or a HTTP 404 if it does not */
+        try {
+            if ($this->client->indices()->exists(['index' => $index])) {
+                $this->client->indices()->delete(['index' => $index]);
+                $this->client->indices()->create(['index' => $index]);
+            }
+        } catch (\Exception $e) {
+            if ($e->getCode() === 404) {
+                echo 'code='.$e->getCode();
+                $this->io->note("Index: " .$index. " not exist. Try to create new index");
+                $this->client->indices()->create(['index' => $index]);
+            } else {
+                $this->io->error("Exception: " . $e->getMessage());
+                exit; // or die(); // eventually clean memory
+            }
         }
 
         $params = [ 'body' => [] ];
         $bulkCount = 0;
         foreach ($this->dataSets as $document) {
             $this->io->progressAdvance();
-            $params['body'][] = [ 'index' => 
-                [ 
+            $params['body'][] = [ 'index' =>
+                [
                     '_index' => $index,
                     '_id' => $document['key']
-                ] 
+                ]
             ];
             $params['body'][] = json_encode($document);
 
