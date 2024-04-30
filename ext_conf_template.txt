@@ -12,3 +12,9 @@ zoteroGroupId = 5080468
 zoteroUserId = 7071210
 # cat=Zotero; type=int; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroBulkSize
 zoteroBulkSize = 50
+# cat=Zotero; type=int; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroLocale
+zoteroLocale = de-DE,en-US
+# cat=Zotero; type=string; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroStyle
+zoteroStyle = technische-universitat-dresden-historische-musikwissenschaft-note
+# cat=Zotero; type=int; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroLinkwrap
+zoteroLinkwrap = 1
