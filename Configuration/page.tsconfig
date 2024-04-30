@@ -1,0 +1,4 @@
+# Use this file to set global page TSconfig, e.g. adding new backend layouts with "mod.web_layout.BackendLayouts.<BackendLayoutKey>"
+# Typo3 v13 loads this file by default if it exists
+
+@import 'EXT:liszt_bibliography/Configuration/TsConfig/Page/Mod/Wizards/Listing.tsconfig'

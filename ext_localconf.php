@@ -15,6 +15,3 @@ ExtensionUtility::configurePlugin(
     [ BibliographyController::class => 'index' ]
 );
 
-ExtensionManagementUtility::addPageTSConfig(
-    '<INCLUDE_TYPOSCRIPT: source="FILE:EXT:liszt_bibliography/Configuration/TsConfig/Page/Mod/Wizards/Listing.tsconfig">'
-);

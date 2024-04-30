@@ -1,7 +1,9 @@
 ######################
 #### DEPENDENCIES ####
 ######################
-<INCLUDE_TYPOSCRIPT: source="FILE:EXT:liszt_common/Configuration/TypoScript/setup.typoscript">
+@import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
+
+// @import 'EXT:liszt_common/Configuration/TypoScript/setup.typoscript'
 
 lib.contentElement {
     #layoutRootPaths {

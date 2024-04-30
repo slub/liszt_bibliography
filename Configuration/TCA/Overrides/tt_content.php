@@ -7,12 +7,15 @@ use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 defined('TYPO3') or die();
 
-ExtensionUtility::registerPlugin(
-    'liszt_bibliography',
-    'BibliographyListing',
-    'Liszt Bibliography Listing'
-);
+(static function (): void {
+    ExtensionUtility::registerPlugin(
+        'liszt_bibliography',
+        'BibliographyListing',
+        'Liszt Bibliography Listing'
+    );
+})();
 
+/*
 ExtensionManagementUtility::addTcaSelectItem(
     'tt_content',
     'CType',
@@ -42,4 +45,4 @@ $GLOBALS['TCA']['tt_content']['types']['lisztbibliography_listing'] = [
         ]
     ]
 ];
-        
+*/

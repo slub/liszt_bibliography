@@ -12,6 +12,27 @@ mod.wizards.newContentElement.wizardItems {
       }
     }
   }
+  show := addToList(lisztbibliography_listing)
+}
+
+
+
+
+/*
+mod.wizards.newContentElement.wizardItems {
+  plugins {
+    elements {
+      lisztbibliography_bibliographylisting {
+        iconIdentifier = content-text
+        title = LLL:EXT:liszt_bibliography/Resources/Private/Language/locallang.xlf:listing_title
+        description = LLL:EXT:liszt_bibliography/Resources/Private/Language/locallang.xlf:listing_description
+        tt_content_defValues {
+          CType = list
+          list_type = lisztbibliography_bibliographylisting
+        }
+      }
+    }
+  }
   common {
     elements {
       lisztbibliography_bibliographylisting {
@@ -25,4 +46,4 @@ mod.wizards.newContentElement.wizardItems {
     }
     show := addToList(lisztbibliography_listing)
   }
-}
+}*/
