@@ -16,78 +16,38 @@ namespace Slub\LisztBibliography\Controller;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamFactoryInterface;
 use Slub\LisztCommon\Controller\ClientEnabledController;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-class BibliographyController extends ClientEnabledController
+use Slub\LisztBibliography\Interfaces\ElasticSearchServiceInterface;
+
+
+final class BibliographyController extends ClientEnabledController
 {
-    /** id of list target **/
-    const MAIN_TARGET = 'bib-list';
-    const SIDE_TARGET = 'bib-list-side';
-    const SIZE = 20;
 
-    /** @var jsCall */
-    protected string $jsCall;
+    // set resultLimit as intern variable from $this->settings['resultLimit'];
+    protected int $resultLimit;
 
-    /** @var div */
-    protected string $div;
+    // Dependency Injection of Repository
+    // https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ApiOverview/DependencyInjection/Index.html#Dependency-Injection
 
-    protected string $bibIndex;
-    protected string $localeIndex;
-
-    public function __construct(ResponseFactoryInterface $responseFactory, StreamFactoryInterface $streamFactory)
+    public function __construct(private readonly ElasticSearchServiceInterface $elasticSearchService)
     {
-        $this->responseFactory = $responseFactory;
-        $this->streamFactory = $streamFactory;
+        $this->resultLimit = $this->settings['resultLimit'] ?? 25;
+
     }
 
-    public function initializeAction(): void
+
+
+    public function listAction(): ResponseInterface
     {
-        $extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
-        $this->bibIndex = $extConf['elasticIndexName'];
-        $this->localeIndex = $extConf['elasticLocaleIndexName'];
+        $this->view->assign('bibliographyList', $this->elasticSearchService->search());
+        return $this->htmlResponse();
     }
 
-    public function indexAction(): ResponseInterface
-    {
-        $this->createJsCall();
-        $this->wrapTargetDiv();
-        $contentStream = $this->
-            streamFactory->
-            createStream(
-                $this->div . 
-                $this->jsCall
-            );
 
-        return $this->
-            responseFactory->
-            createResponse()->
-            withBody($contentStream);
-    }
 
-    private function wrapTargetDiv(): void
-    {
-        $sideCol = '<div id="' .
-            self::SIDE_TARGET .
-            '" class="col-md-4 col-xl-3 order-md-2"><ul class="list-group"></ul></div>';
-        $mainCol =  '<div id="' .
-            self::MAIN_TARGET .
-            '" class="col-md order-md-1"></div>';
-        $this->div = '<div class="container"><div class="row">' .
-            $sideCol . $mainCol . '</div>';
-    }
 
-    private function createJsCall(): void
-    {
-        $this->jsCall = 
-            '<script>;document.addEventListener("DOMContentLoaded", _ => new BibliographyController({' .
-                'target:"' . self::MAIN_TARGET . '",' .
-                'sideTarget:"' . self::SIDE_TARGET . '",' .
-                'size:' . self::SIZE . ',' .
-                'bibIndex:"' . $this->bibIndex . '",' .
-                'localeIndex:"' . $this->localeIndex . '"' .
-                '}));</script>';
-    }
+
 }

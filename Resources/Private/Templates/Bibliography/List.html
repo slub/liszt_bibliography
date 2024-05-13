@@ -1,0 +1,43 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+
+<f:debug>{_all}</f:debug>
+
+<div class="row" style="margin-top: 3rem;">
+    <div class="col-12 col-md-3 col-lg-2 ">
+        <nav aria-label="Suchfilter" class="filter" >
+
+            <h3 class="visually-hidden">Suchfilter</h3>
+
+            <f:for each="{bibliographyList.aggregations}" key="key" as="filterGroup">
+                <f:if condition="{filterGroup.buckets}">
+                    <div class="filter-block">
+                        <h4 class="">{key}</h4>
+                        <ul>
+                            <f:for each="{filterGroup.buckets}" as="filter">
+                                <li><span class="form-check"><input class="form-check-input" type="checkbox" id="{filter.key}" value="{filter.key}"><label class="form-check-label" for="{filter.key}">{filter.key}</label></span><span class="count">{filter.doc_count}</span></li>
+                            </f:for>
+                        </ul>
+                    </div>
+                </f:if>
+            </f:for>
+
+        </nav>
+
+    </div>
+    <div class="col-12 col-md-9 col-lg-10 filter">
+
+        <f:for each="{bibliographyList.hits.hits}" as="hit">
+            <div class="search-result-item">
+                <h3>{hit._source.title}</h3>
+                <p>
+                    <f:for each="{hit._source.creators}" as="creator">
+                    {creator.firstName} {creator.lastName}
+                    </f:for>
+                    ,{hit._source.date}, {hit._source.pages}, {hit._source.language}</p>
+            </div>
+        </f:for>
+
+
+
+    </div>
+</div>

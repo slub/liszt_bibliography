@@ -11,7 +11,7 @@ defined('TYPO3') or die();
 ExtensionUtility::configurePlugin(
     'LisztBibliography',
     'BibliographyListing',
-    [ BibliographyController::class => 'index' ],
-    [ BibliographyController::class => 'index' ]
+    [ BibliographyController::class => 'list' ],
+    [ BibliographyController::class => '' ]
 );
 

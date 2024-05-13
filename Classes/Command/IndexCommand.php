@@ -249,12 +249,28 @@ class IndexCommand extends Command
         $this->io->progressFinish();
     }
 
+
     protected function commitBibliography(): void
     {
         $index = $this->extConf['elasticIndexName'];
         $this->io->text('Committing the ' . $index . ' index');
 
         $this->io->progressStart(count($this->bibliographyItems));
+
+        // index params -> mapping fields for facetting in index
+        // Todo: optimize with synthetic _source and copy fields?
+/*        $elasticIndexMappings = [
+            'index' => ['index' => $index],
+            'body' => [
+                'mappings' => [
+                    'properties' => [
+                        'itemType' => [
+                            'type' => 'keyword',
+                        ]
+                    ]
+                ]
+            ]
+        ];*/
 
         /* For more recent versions of Elasticsearch (8.x),
        a call to $client->indices()->exists($indexParams) no longer returns a boolean,

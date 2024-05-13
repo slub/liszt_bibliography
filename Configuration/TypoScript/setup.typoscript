@@ -17,6 +17,8 @@ lib.contentElement {
     }
 }
 
+
+// ToDo: needed?
 tt_content {
     lisztbibliography_listing =< lib.contentElement
     lisztbibliography_listing {
@@ -24,7 +26,7 @@ tt_content {
     }
 }
 
-page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
+// page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
 
 
 plugin.tx_liszt_common {
@@ -35,5 +37,7 @@ plugin.tx_liszt_common {
                 href = #
             }
         }
+      resultLimit = 20
+
     }
 }

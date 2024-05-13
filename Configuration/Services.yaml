@@ -6,9 +6,7 @@ services:
   Slub\LisztBibliography\:
     resource: '../Classes/*'
     exclude: '../Classes/Domain/Model/*'
-  Slub\LisztBibliography\Classes\Controller\BibliographyController:
-    tags:
-      - backend.controller
+#  if more than one! class implement the same interface (i.e.Search Interface) read: https://usetypo3.com/dependency-injection/
   Slub\LisztBibliography\Command\IndexCommand:
     tags:
       -
