@@ -34,7 +34,7 @@
         "ci:tests": [ "@ci:tests:unit", "@ci:tests:functional" ],
         "ci:tests:unit": [ "Build/Scripts/runTests.sh -s unit -b docker -p 8.2" ],
         "ci:tests:functional": [ "Build/Scripts/runTests.sh -s functional -b docker -p 8.2" ],
-        "ci:install": [ "Build/Scripts/runTests.sh -s composerInstall -b docker" ]
+        "ci:install": [ "Build/Scripts/runTests.sh -s composerInstall -b docker -p 8.2" ]
     },
     "config": {
         "allow-plugins": {
