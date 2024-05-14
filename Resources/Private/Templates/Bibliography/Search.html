@@ -25,15 +25,21 @@
 
     </div>
     <div class="col-12 col-md-9 col-lg-10 filter">
-
         <f:for each="{bibliographyList.hits.hits}" as="hit">
             <div class="search-result-item">
-                <h3>{hit._source.title}</h3>
-                <p>
+                <f:if condition="{hit._source.localizedCitations.{locale}}">
+                    <f:then>
+                    <f:format.html >{hit._source.localizedCitations.{locale}}</f:format.html>
+                    </f:then>
+                    <f:else>
+                        <f:format.html >{hit._source.localizedCitations.de-DE}</f:format.html>
+                        <p>else</p>
+                    </f:else>
+                </f:if>
+
                     <f:for each="{hit._source.creators}" as="creator">
                     {creator.firstName} {creator.lastName}
                     </f:for>
-                    ,{hit._source.date}, {hit._source.pages}, {hit._source.language}</p>
             </div>
         </f:for>
 

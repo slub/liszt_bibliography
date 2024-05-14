@@ -48,7 +48,7 @@ class ElasticSearchService implements ElasticSearchServiceInterface
                     'match_all' => new \stdClass()
                 ],
             'size' => 10,
-             '_source' => ['itemType', 'title', 'creators', 'pages','date','language'],
+             '_source' => ['itemType', 'title', 'creators', 'pages','date','language', 'localizedCitations'],
                 'aggs' => [
                     'itemType' => [
                         'terms' => [
