@@ -20,6 +20,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slub\LisztCommon\Common\ElasticClientBuilder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
@@ -43,29 +44,37 @@ class IndexCommand extends Command
     protected int $total;
     protected Collection $locales;
     protected Collection $localizedCitations;
+    protected InputInterface $input;
 
     function __construct(SiteFinder $siteFinder)
     {
         parent::__construct();
 
         $this->locales = Collection::wrap($siteFinder->getAllSites())->
-            map(function (Site $site): array { return $site->getLanguages(); })->
-            flatten()->
-            map(function (SiteLanguage $language): string { return $language->getHreflang(); });
+        map(function (Site $site): array {
+            return $site->getLanguages();
+        })->
+        flatten()->
+        map(function (SiteLanguage $language): string {
+            return $language->getHreflang();
+        });
     }
 
     protected function getRequest(): ServerRequestInterface
     {
+        // ToDo: $GLOBALS['TYPO3_REQUEST'] was deprecated in TYPO3 v9.2 and will be removed in a future version.
         return $GLOBALS['TYPO3_REQUEST'];
     }
 
     protected function configure(): void
     {
-        $this->setDescription('Create elasticsearch index from zotero bibliography');
+        $this->setDescription('Create elasticsearch index from zotero bibliography')
+            ->addOption('fetch-citations', null, InputOption::VALUE_NONE, 'Run with fetch localized citations');
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output) {
-		$this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
         $this->client = ElasticClientBuilder::getClient();
         $this->apiKey = $this->extConf['zoteroApiKey'];
         $this->io = new SymfonyStyle($input, $output);
@@ -75,12 +84,14 @@ class IndexCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         // get bulk size and total size
-        $this->bulkSize = (int) $this->extConf['zoteroBulkSize'];
-
+        $this->bulkSize = (int)$this->extConf['zoteroBulkSize'];
+        $this->input = $input;
         $this->io->section('Fetching Bibliography Data');
         $this->fetchBibliography();
-        $this->io->section('Fetching Localized Citations');
-        $this->fetchCitations();
+        if ($input->getOption('fetch-citations')) {
+            $this->io->section('Fetching Localized Citations');
+            $this->fetchCitations();
+        }
         $this->io->section('Fetching TEI Data');
         $this->fetchTeiData();
         $this->io->section('Building Datasets');
@@ -94,23 +105,25 @@ class IndexCommand extends Command
     {
         $this->io->progressStart($this->total);
         $this->dataSets = $this->bibliographyItems->
-            map(function($bibliographyItem) {
-                $this->io->progressAdvance();
-                return self::buildDataSet($bibliographyItem, $this->localizedCitations, $this->teiDataSets);
-            });
+        map(function ($bibliographyItem) {
+            $this->io->progressAdvance();
+            return self::buildDataSet($bibliographyItem, $this->input->getOption('fetch-citations') ? $this->localizedCitations : null, $this->teiDataSets);
+        });
         $this->io->progressFinish();
     }
 
     protected static function buildDataSet(
-        array $bibliographyItem,
-        Collection $localizedCitations,
-        Collection $teiDataSets
+        array       $bibliographyItem,
+        ?Collection $localizedCitations,
+        Collection  $teiDataSets
     )
     {
         $key = $bibliographyItem['key'];
         $bibliographyItem['localizedCitations'] = [];
-        foreach ($localizedCitations as $locale => $localizedCitation) {
-            $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
+        if ($localizedCitations) {
+            foreach ($localizedCitations as $locale => $localizedCitation) {
+                $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
+            }
         }
         $bibliographyItem['tei'] = $teiDataSets->get($key);
         return $bibliographyItem;
@@ -119,33 +132,26 @@ class IndexCommand extends Command
     protected function fetchBibliography(): void
     {
         $client = new ZoteroApi($this->extConf['zoteroApiKey']);
-        $response = $client->
+        $this->bibliographyItems = new Collection();
+        $this->total = 1;
+        $cursor = 0;
+        // fetch bibliography items bulkwise
+        while ($cursor < $this->total) {
+            $response = $client->
             group($this->extConf['zoteroGroupId'])->
             items()->
             top()->
-            limit(1)->
+            start($cursor)->
+            limit($this->bulkSize)->
             send();
-        $this->total = (int) $response->getHeaders()['Total-Results'][0];
-
-        // fetch bibliography items bulkwise
-        $this->io->progressStart($this->total);
-        $collection = new Collection($response->getBody());
-        $this->bibliographyItems = $collection->
-            pluck('data');
-
-        $cursor = $this->bulkSize;
-        while ($cursor < $this->total) {
-            $this->io->progressAdvance($this->bulkSize);
-            $response = $client->
-                group($this->extConf['zoteroGroupId'])->
-                items()->
-                top()->
-                start($cursor)->
-                limit($this->bulkSize)->
-                send();
+            $this->total = (int)$response->getHeaders()['Total-Results'][0];
+            if ($cursor === 0) {
+                $this->io->progressStart($this->total);
+            }
             $collection = new Collection($response->getBody());
             $this->bibliographyItems = $this->bibliographyItems->
-                concat($collection->pluck('data'));
+            concat($collection->pluck('data'));
+            $this->io->progressAdvance($this->bulkSize);
             $cursor += $this->bulkSize;
         }
         $this->io->progressFinish();
@@ -154,56 +160,46 @@ class IndexCommand extends Command
     protected function fetchCitations(): void
     {
         $this->localizedCitations = new Collection();
-        $this->locales->each(function($locale) { $this->fetchCitationLocale($locale); });
+        $this->locales->each(function ($locale) {
+            $this->fetchCitationLocale($locale);
+        });
     }
 
     protected function fetchCitationLocale(string $locale): void
     {
         $client = new ZoteroApi($this->extConf['zoteroApiKey']);
         $style = $this->extConf['zoteroStyle'];
-        $response = $client->
-            group($this->extConf['zoteroGroupId'])->
-            items()->
-            top()->
-            limit(1)->
-            setInclude('citation')->
-            setStyle($style)->
-            setLinkwrap()->
-            setLocale($locale)->
-            send();
-
-        // fetch bibliography items bulkwise
         $this->io->text($locale);
-        $this->io->progressStart($this->total);
-        $result = Collection::wrap($response->getBody())->keyBy('key');
-
-        $cursor = $this->bulkSize;
+        $result = new Collection();
+        $cursor = 0;
+        // fetch bibliography items bulkwise
         while ($cursor < $this->total) {
+            if ($cursor === 0) {
+                $this->io->progressStart($this->total);
+            }
             try {
                 $response = $client->
-                    group($this->extConf['zoteroGroupId'])->
-                    items()->
-                    top()->
-                    start($cursor)->
-                    limit($this->bulkSize)->
-                    setInclude('citation')->
-                    setStyle($style)->
-                    setLinkwrap()->
-                    setLocale($locale)->
-                    send();
+                group($this->extConf['zoteroGroupId'])->
+                items()->
+                top()->
+                start($cursor)->
+                limit($this->bulkSize)->
+                setInclude('citation')->
+                setStyle($style)->
+                setLinkwrap()->
+                setLocale($locale)->
+                send();
                 $result = $result->merge(Collection::wrap($response->getBody())->keyBy('key'));
+                $this->io->progressAdvance($this->bulkSize);
                 $cursor += $this->bulkSize;
             } catch (\Exception $e) {
                 $this->io->newline(2);
                 $this->io->caution($e->getMessage());
-
                 $this->io->note('Stay calm. This is normal for Zotero\'s API. I\'m trying it again. fetchCitationLocale');
             }
-            $this->io->progressAdvance($this->bulkSize);
         }
-
         $this->localizedCitations = $this->localizedCitations->merge(
-            new Collection([ $locale => $result ])
+            new Collection([$locale => $result])
         );
         $this->io->progressFinish();
     }
@@ -211,40 +207,32 @@ class IndexCommand extends Command
     protected function fetchTeiData(): void
     {
         $client = new ZoteroApi($this->extConf['zoteroApiKey']);
-        $response = $client->
-            group($this->extConf['zoteroGroupId'])->
-            items()->
-            top()->
-            limit(1)->
-            setInclude('tei')->
-            send();
-
+        $this->teiDataSets = new Collection();
+        $cursor = 0;
         // fetch bibliography items bulkwise
-        $this->io->progressStart($this->total);
-        $collection = new Collection($response->getBody());
-        $this->teiDataSets = $collection->keyBy('key');
-
-        $cursor = $this->bulkSize;
         while ($cursor < $this->total) {
+            if ($cursor === 0) {
+                $this->io->progressStart($this->total);
+            }
             try {
                 $response = $client->
-                    group($this->extConf['zoteroGroupId'])->
-                    items()->
-                    top()->
-                    start($cursor)->
-                    limit($this->bulkSize)->
-                    setInclude('tei')->
-                    send();
+                group($this->extConf['zoteroGroupId'])->
+                items()->
+                top()->
+                start($cursor)->
+                limit($this->bulkSize)->
+                setInclude('tei')->
+                send();
                 $collection = new Collection($response->getBody());
                 $this->teiDataSets = $this->teiDataSets->
-                    concat($collection->keyBy('key'));
+                concat($collection->keyBy('key'));
+                $this->io->progressAdvance($this->bulkSize);
                 $cursor += $this->bulkSize;
             } catch (\Exception $e) {
                 $this->io->newline(2);
                 $this->io->caution($e->getMessage());
                 $this->io->note('Stay calm. This is normal for Zotero\'s API. I\'m trying it again. fetchTeiData');
             }
-            $this->io->progressAdvance($this->bulkSize);
         }
         $this->io->progressFinish();
     }
@@ -259,18 +247,18 @@ class IndexCommand extends Command
 
         // index params -> mapping fields for facetting in index
         // Todo: optimize with synthetic _source and copy fields?
-/*        $elasticIndexMappings = [
-            'index' => ['index' => $index],
-            'body' => [
-                'mappings' => [
-                    'properties' => [
-                        'itemType' => [
-                            'type' => 'keyword',
+        /*        $elasticIndexMappings = [
+                    'index' => ['index' => $index],
+                    'body' => [
+                        'mappings' => [
+                            'properties' => [
+                                'itemType' => [
+                                    'type' => 'keyword',
+                                ]
+                            ]
                         ]
                     ]
-                ]
-            ]
-        ];*/
+                ];*/
 
         /* For more recent versions of Elasticsearch (8.x),
        a call to $client->indices()->exists($indexParams) no longer returns a boolean,
@@ -283,8 +271,8 @@ class IndexCommand extends Command
             }
         } catch (\Exception $e) {
             if ($e->getCode() === 404) {
-                echo 'code='.$e->getCode();
-                $this->io->note("Index: " .$index. " not exist. Try to create new index");
+                echo 'code=' . $e->getCode();
+                $this->io->note("Index: " . $index . " not exist. Try to create new index");
                 $this->client->indices()->create(['index' => $index]);
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
@@ -292,11 +280,11 @@ class IndexCommand extends Command
             }
         }
 
-        $params = [ 'body' => [] ];
+        $params = ['body' => []];
         $bulkCount = 0;
         foreach ($this->dataSets as $document) {
             $this->io->progressAdvance();
-            $params['body'][] = [ 'index' =>
+            $params['body'][] = ['index' =>
                 [
                     '_index' => $index,
                     '_id' => $document['key']
@@ -306,11 +294,11 @@ class IndexCommand extends Command
 
             if (!(++$bulkCount % $this->extConf['elasticBulkSize'])) {
                 $this->client->bulk($params);
-                $params = [ 'body' => [] ];
+                $params = ['body' => []];
             }
         }
         $this->io->progressFinish();
-        $this->client->bulk($params);
+        //  $this->client->bulk($params);
 
         $this->io->text('done');
     }

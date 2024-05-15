@@ -12,5 +12,5 @@ services:
       -
         name: console.command
         command: 'liszt-bibliography:index'
-        description: 'Create elasticsearch index from zotero bibliography'
+        description: 'Create elasticsearch index from zotero bibliography, options: --fetch-citations'
         schedulable: true
