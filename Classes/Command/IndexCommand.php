@@ -30,6 +30,13 @@ use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+
+/* ToDo:
+- exception handling (for networking problems, api down etc.?) and check empty zoteroAPIKey, zoteroGroupId
+- sfae the "Last-Modified-Version" Header from zotero and check if the data has changed since the last fetch
+- potential infinite loops, exit strategy with loop count in try/catch
+- fetch the api in bulks of 50 and save bulk wise in elasticsearch?
+*/
 class IndexCommand extends Command
 {
 
@@ -136,7 +143,7 @@ class IndexCommand extends Command
         $this->total = 1;
         $cursor = 0;
         // fetch bibliography items bulkwise
-        while ($cursor < $this->total) {
+        while ($cursor < ($this->total + $this->bulkSize)) {
             $response = $client->
             group($this->extConf['zoteroGroupId'])->
             items()->
@@ -144,14 +151,23 @@ class IndexCommand extends Command
             start($cursor)->
             limit($this->bulkSize)->
             send();
-            $this->total = (int)$response->getHeaders()['Total-Results'][0];
+            $headers = $response->getHeaders();
+            if (isset($headers['Total-Results'][0])) {
+                $this->total = (int)$headers['Total-Results'][0];
+            } else {
+                $this->io->error('break fetchBibliography loop because of missing Total-Results, ' .$this->total);
+                break; //  break the loop if there is no result header to prevent infinite loops
+            }
             if ($cursor === 0) {
                 $this->io->progressStart($this->total);
             }
             $collection = new Collection($response->getBody());
             $this->bibliographyItems = $this->bibliographyItems->
             concat($collection->pluck('data'));
-            $this->io->progressAdvance($this->bulkSize);
+            // adjust progress bar
+            $remainingItems = $this->total - $cursor;
+            $advanceBy = min($remainingItems, $this->bulkSize);
+            $this->io->progressAdvance($advanceBy);
             $cursor += $this->bulkSize;
         }
         $this->io->progressFinish();
@@ -173,7 +189,7 @@ class IndexCommand extends Command
         $result = new Collection();
         $cursor = 0;
         // fetch bibliography items bulkwise
-        while ($cursor < $this->total) {
+        while ($cursor < ($this->total + $this->bulkSize)) {
             if ($cursor === 0) {
                 $this->io->progressStart($this->total);
             }
@@ -190,7 +206,10 @@ class IndexCommand extends Command
                 setLocale($locale)->
                 send();
                 $result = $result->merge(Collection::wrap($response->getBody())->keyBy('key'));
-                $this->io->progressAdvance($this->bulkSize);
+                // adjust progress bar
+                $remainingItems = $this->total - $cursor;
+                $advanceBy = min($remainingItems, $this->bulkSize);
+                $this->io->progressAdvance($advanceBy);
                 $cursor += $this->bulkSize;
             } catch (\Exception $e) {
                 $this->io->newline(2);
@@ -210,7 +229,7 @@ class IndexCommand extends Command
         $this->teiDataSets = new Collection();
         $cursor = 0;
         // fetch bibliography items bulkwise
-        while ($cursor < $this->total) {
+        while ($cursor < ($this->total + $this->bulkSize)) {
             if ($cursor === 0) {
                 $this->io->progressStart($this->total);
             }
@@ -226,7 +245,10 @@ class IndexCommand extends Command
                 $collection = new Collection($response->getBody());
                 $this->teiDataSets = $this->teiDataSets->
                 concat($collection->keyBy('key'));
-                $this->io->progressAdvance($this->bulkSize);
+                // adjust progress bar
+                $remainingItems = $this->total - $cursor;
+                $advanceBy = min($remainingItems, $this->bulkSize);
+                $this->io->progressAdvance($advanceBy);
                 $cursor += $this->bulkSize;
             } catch (\Exception $e) {
                 $this->io->newline(2);
