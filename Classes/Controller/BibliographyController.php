@@ -24,6 +24,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Slub\LisztBibliography\Interfaces\ElasticSearchServiceInterface;
 
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 final class BibliographyController extends ClientEnabledController
 {
@@ -31,7 +32,6 @@ final class BibliographyController extends ClientEnabledController
 
     // set resultLimit as intern variable from $this->settings['resultLimit'];
     protected int $resultLimit;
-
 
 
     // Dependency Injection of Repository
@@ -57,6 +57,9 @@ final class BibliographyController extends ClientEnabledController
         $this->view->assign('locale', $locale);
 
         $this->view->assign('totalItems', $elasticResponse['hits']['total']['value']);
+
+        $searchParams = $this->request->getQueryParams();
+        $this->view->assign('searchParams', $searchParams);
 
 
         $this->view->assign('bibliographyList', $elasticResponse);
