@@ -4,7 +4,7 @@
 		<header/>
 		<body>
 			<trans-unit id="listing_title" resname="tx_publisherdb_domain_model_publishermikroitem">
-				<source>Bibliographie-Listing</source>
+				<source>Liszt Bibliography Listing</source>
 			</trans-unit>
 			<trans-unit id="listing_description" resname="tx_publisherdb_domain_model_publishermikroitem">
 				<source>Eine Auflistung aller Einträge der Liszt-Bibliographie</source>

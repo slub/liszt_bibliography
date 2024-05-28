@@ -12,7 +12,7 @@ mod.wizards.newContentElement.wizardItems {
       }
     }
   }
-  show := addToList(lisztbibliography_listing)
+  show := addToList(lisztbibliography_bibliographylisting)
 }
 
 

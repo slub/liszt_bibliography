@@ -1,9 +1,7 @@
 ######################
 #### DEPENDENCIES ####
 ######################
-@import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
-
-// @import 'EXT:liszt_common/Configuration/TypoScript/setup.typoscript'
+#@import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
 
 
 // ToDo: Frage Matthias warum doppelt?
@@ -14,30 +12,29 @@
 
     }
     templateRootPaths {
-        100 = EXT:liszt_bibliography/Resources/Private/Templates/
+      20 = EXT:liszt_web/Resources/Private/Templates/
+      100 = EXT:liszt_bibliography/Resources/Private/Templates/
     }
   partialRootPaths {
     20 = EXT:liszt_web/Resources/Private/Partials/
         100 = EXT:liszt_bibliography/Resources/Private/Partials/
   }
-}
-
-
+}*/
 
 
 
 // ToDo: needed?
-tt_content {
+/*tt_content {
     lisztbibliography_listing =< lib.contentElement
     lisztbibliography_listing {
         templateName = BibliographyListing
     }
-}
+}*/
 
 // page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
 
 
-plugin.tx_liszt_common {
+/*plugin.tx_liszt_common {
     settings {
         searchBarSelectItems {
             1:{
@@ -48,4 +45,4 @@ plugin.tx_liszt_common {
       resultLimit = 20
 
     }
-}
+}*/

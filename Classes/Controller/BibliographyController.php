@@ -60,7 +60,9 @@ final class BibliographyController extends ClientEnabledController
 
         $searchParams = $this->request->getQueryParams();
         $this->view->assign('searchParams', $searchParams);
-
+      //  $this->view->setPartialRootPaths(['EXT:liszt_web/Resources/Private/Partials/']);
+       // $this->view->setTemplateRootPaths(['EXT:liszt_web/Resources/Private/Templates/']);
+      //  $this->view->setLayoutRootPaths(['EXT:liszt_web/Resources/Private/Layouts/']);
 
         $this->view->assign('bibliographyList', $elasticResponse);
         return $this->htmlResponse();

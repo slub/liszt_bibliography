@@ -11,7 +11,8 @@ defined('TYPO3') or die();
     ExtensionUtility::registerPlugin(
         'liszt_bibliography',
         'BibliographyListing',
-        'Liszt Bibliography Listing'
+        'Liszt Bibliography Listing',
+        'content-text'
     );
 })();
 
