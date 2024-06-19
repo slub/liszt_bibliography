@@ -16,3 +16,9 @@ Then, execute
     $ typo3 liszt_bibliography:index
 
 The plugin may be included on a page using the New Content Element Wizard.
+
+# Maintainers
+
+If you have any questions or encounter any problems, please do not hesitate to contact us.
+- [Matthias Richter](https://github.com/dikastes)
+- [Thomas Schefter](https://github.com/thomas-sc)
