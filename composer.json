@@ -8,8 +8,8 @@
     "require": {
         "typo3/cms-core": "^11.5",
         "typo3/cms-fluid-styled-content": "^11.5",
-        "slub/liszt-common": "dev-main",
-        "dikastes/zotero-api": "dev-master",
+        "slub/liszt-common": "@dev",
+        "dikastes/zotero-api": "@dev",
         "illuminate/collections": "^8"
     },
     "autoload": {
