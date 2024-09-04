@@ -34,6 +34,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class IndexCommand extends Command
 {
 
+    const API_TRIALS = 3;
+
     protected string $apiKey;
     protected Collection $bibliographyItems;
     protected Collection $deletedItems;
@@ -121,20 +123,45 @@ class IndexCommand extends Command
 
         $cursor = $this->bulkSize;
         $index = $this->extConf['elasticIndexName'];
-        if ( $this->client->indices()->exists(['index' => $index])) {
-            $this->client->indices()->delete(['index' => $index]);
-            $this->client->indices()->create(['index' => $index]);
+        try {
+            // in older Elasticsearch versions (until 7) exists returns a bool
+            if ($this->client->indices()->exists(['index' => $index])) {
+                $this->client->indices()->delete(['index' => $index]);
+                $this->client->indices()->create(['index' => $index]);
+            }
+        } catch (\Exception $e) {
+            // other versions return a Message object
+            if ($e->getCode() === 404) {
+                $this->io->note("Index: " . $index . " does not exist. Trying to create new index.");
+                $this->client->indices()->create(['index' => $index]);
+            } else {
+                $this->io->error("Exception: " . $e->getMessage());
+                die;
+            }
         }
-        while ($cursor < $this->total) {
+
+        $apiCounter = self::API_TRIALS;
+
+        while ($cursor < $this->total + $this->bulkSize) {
             try {
                 $this->sync($cursor, 0);
-                $this->io->progressAdvance($this->bulkSize);
+
+                $apiCounter = self::API_TRIALS;
+                $remainingItems = $this->total - $cursor;
+                $advanceBy = min($remainingItems, $this->bulkSize);
+                $this->io->progressAdvance($advanceBy);
+                $cursor += $this->bulkSize;
             } catch (\Exception $e) {
-                $this->io->newline(2);
+                $this->io->newline(1);
                 $this->io->caution($e->getMessage());
-                $this->io->note('Stay calm. This is normal for Zotero\'s API. I\'m trying it again.');
+                $this->io->newline(1);
+                if ($apiCounter == 0) {
+                    $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
+                    die;
+                } else {
+                    $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
+                }
             }
-            $cursor += $this->bulkSize;
         }
         $this->io->progressFinish();
     }
@@ -145,11 +172,11 @@ class IndexCommand extends Command
         $this->io->text('done');
     }
 
-    protected function sync(int $version = 0, int $cursor = 0): void
+    protected function sync(int $cursor = 0, int $version = 0): void
     {
-        $this->fetchBibliography(0, $version);
-        $this->fetchCitations(0, $version);
-        $this->fetchTeiData(0, $version);
+        $this->fetchBibliography($cursor, $version);
+        $this->fetchCitations($cursor, $version);
+        $this->fetchTeiData($cursor, $version);
         $this->buildDataSets();
         $this->commitBibliography();
     }
