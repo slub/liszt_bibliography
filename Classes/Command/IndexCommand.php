@@ -92,7 +92,6 @@ class IndexCommand extends Command
     {
         $this->bulkSize = (int) $this->extConf['zoteroBulkSize'];
         $version = $this->getVersion($input);
-
         if ($version == 0) {
             $this->io->text('Full data synchronization requested.');
             $this->fullSync();
@@ -209,7 +208,18 @@ class IndexCommand extends Command
             ]
         ];
 
-        return (int) $this->client->search($params)['aggregations']['max_version']['value'];
+        try {
+            $response = $this->client->search($params);
+            return (int) $response['aggregations']['max_version']['value'];
+        } catch (\Elasticsearch\Common\Exceptions\Missing404Exception $e) {
+            // Index not found, return 0
+            $this->io->note('No Index with name: ' .$this->extConf['elasticIndexName'] . ' found. Return 0 as Version, create new index in next steps...');
+            return 0;
+        } catch (\Exception $e) {
+            // Handle other potential exceptions if necessary
+            $this->io->error("Exception: " . $e->getMessage());
+            die;
+        }
     }
 
     protected function fetchBibliography(int $cursor, int $version): void
