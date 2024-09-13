@@ -17,6 +17,7 @@ use Elasticsearch\Client;
 use Hedii\ZoteroApi\ZoteroApi;
 use Illuminate\Support\Collection;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
 use Slub\LisztCommon\Common\ElasticClientBuilder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -49,7 +50,10 @@ class IndexCommand extends Command
     protected Collection $locales;
     protected Collection $localizedCitations;
 
-    function __construct(SiteFinder $siteFinder)
+    function __construct(
+        SiteFinder $siteFinder,
+        private readonly LoggerInterface $logger
+    )
     {
         parent::__construct();
 
@@ -96,9 +100,11 @@ class IndexCommand extends Command
         if ($version == 0) {
             $this->io->text('Full data synchronization requested.');
             $this->fullSync();
+            $this->logger->info('Full data synchronization successful.');
         } else {
             $this->io->text('Synchronizing all data from version ' . $version);
             $this->versionedSync($version);
+            $this->logger->info('Versioned data synchronization successful.');
         }
 
         return 0;
@@ -136,6 +142,7 @@ class IndexCommand extends Command
                 $this->client->indices()->create(['index' => $index]);
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
+                $this->log->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
                 die;
             }
         }
@@ -157,6 +164,7 @@ class IndexCommand extends Command
                 $this->io->newline(1);
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
+                    $this->log->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
                     die;
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
@@ -168,8 +176,25 @@ class IndexCommand extends Command
 
     protected function versionedSync(int $version): void
     {
-        $this->sync(0, $version);
-        $this->io->text('done');
+        $apiCounter = self::API_TRIALS;
+        while (true) {
+            try {
+                $this->sync(0, $version);
+                $this->io->text('done');
+                return;
+            } catch (\Exception $e) {
+                $this->io->newline(1);
+                $this->io->caution($e->getMessage());
+                $this->io->newline(1);
+                if ($apiCounter == 0) {
+                    $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
+                    $this->log->warning('Bibliography sync unseccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                    die;
+                } else {
+                    $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
+                }
+            }
+        }
     }
 
     protected function sync(int $cursor = 0, int $version = 0): void
