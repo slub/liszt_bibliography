@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
+      - name: "Setup PHP"
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
       - name: "Install Composer dependencies"
         run: "composer ci:install"
       - name: "Run the tests"
@@ -33,6 +37,10 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
+      - name: "Setup PHP"
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
       - name: "Install Composer dependencies"
         run: "composer update --no-progress"
       - name: "Run the tests"
