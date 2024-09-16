@@ -142,7 +142,7 @@ class IndexCommand extends Command
                 $this->client->indices()->create(['index' => $index]);
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
-                $this->log->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
+                $this->logger->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
                 die;
             }
         }
@@ -164,7 +164,7 @@ class IndexCommand extends Command
                 $this->io->newline(1);
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
-                    $this->log->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                    $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
                     die;
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
@@ -188,7 +188,7 @@ class IndexCommand extends Command
                 $this->io->newline(1);
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
-                    $this->log->warning('Bibliography sync unseccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                    $this->logger->warning('Bibliography sync unseccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
                     die;
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
