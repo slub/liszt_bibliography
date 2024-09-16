@@ -8,9 +8,10 @@
     "require": {
         "typo3/cms-core": "^12",
         "typo3/cms-fluid-styled-content": "^12",
-        "dikastes/zotero-api": "@dev",
+        "typo3/cms-scheduler": "^12",
+        "dikastes/zotero-api": "^1.2",
         "elasticsearch/elasticsearch": "^7",
-        "illuminate/collections": "^9",
+        "illuminate/collections": "^11",
         "slub/liszt-common": "@dev"
     },
     "require-dev": {
