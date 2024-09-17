@@ -6,16 +6,16 @@
         "GPL-2.0-or-later"
     ],
     "require": {
-        "typo3/cms-core": "^13",
-        "typo3/cms-fluid-styled-content": "^13",
-        "slub/liszt-common": "dev-12-upgrade-to-typo3-v13",
-        "dikastes/zotero-api": "dev-main",
-        "illuminate/collections": "^11"
+        "typo3/cms-core": "^11.5",
+        "typo3/cms-fluid-styled-content": "^11.5",
+        "slub/liszt-common": "dev-main",
+        "dikastes/zotero-api": "dev-master",
+        "illuminate/collections": "^8"
     },
     "require-dev": {
         "phpstan/phpstan": "^1",
-        "phpunit/phpunit": "^10",
-        "typo3/testing-framework": "^8"
+        "phpunit/phpunit": "^9",
+        "typo3/testing-framework": "^7"
     },
     "autoload": {
         "psr-4": {
@@ -32,9 +32,9 @@
         "ci:php": [ "@ci:php:stan" ],
         "ci:php:stan": [ "Build/Scripts/runTests.sh -s phpstan -b docker" ],
         "ci:tests": [ "@ci:tests:unit", "@ci:tests:functional" ],
-        "ci:tests:unit": [ "Build/Scripts/runTests.sh -s unit -b docker -p 8.2" ],
-        "ci:tests:functional": [ "Build/Scripts/runTests.sh -s functional -b docker -p 8.2" ],
-        "ci:install": [ "Build/Scripts/runTests.sh -s composerInstall -b docker -p 8.2" ]
+        "ci:tests:unit": [ "Build/Scripts/runTests.sh -s unit -b docker" ],
+        "ci:tests:functional": [ "Build/Scripts/runTests.sh -s functional -b docker" ],
+        "ci:install": [ "Build/Scripts/runTests.sh -s composerInstall -b docker" ]
     },
     "config": {
         "allow-plugins": {

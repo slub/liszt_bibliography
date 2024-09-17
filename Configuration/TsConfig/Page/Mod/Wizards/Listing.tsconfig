@@ -12,7 +12,6 @@ mod.wizards.newContentElement.wizardItems {
       }
     }
   }
-  show := addToList(lisztbibliography_bibliographylisting)
 }
 
 
