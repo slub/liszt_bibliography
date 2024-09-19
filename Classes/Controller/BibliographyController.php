@@ -26,13 +26,11 @@ use Slub\LisztBibliography\Interfaces\ElasticSearchServiceInterface;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
-final class BibliographyController extends ClientEnabledController
+class BibliographyController extends ClientEnabledController
 {
 
-
-    // set resultLimit as intern variable from $this->settings['resultLimit'];
+    // set resultLimit as internal variable from $this->settings['resultLimit'];
     protected int $resultLimit;
-
 
     // Dependency Injection of Repository
     // https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ApiOverview/DependencyInjection/Index.html#Dependency-Injection
@@ -40,12 +38,7 @@ final class BibliographyController extends ClientEnabledController
     public function __construct(private readonly ElasticSearchServiceInterface $elasticSearchService)
     {
         $this->resultLimit = $this->settings['resultLimit'] ?? 25;
-
-
-
     }
-
-
 
     public function searchAction(): ResponseInterface
     {
