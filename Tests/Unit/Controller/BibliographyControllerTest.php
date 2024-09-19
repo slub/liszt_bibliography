@@ -5,10 +5,9 @@ namespace Slub\LisztBibliography\Tests\Unit\Controller;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slub\LisztBibliography\Controller\BibliographyController;
+use Slub\LisztBibliography\Services\ElasticSearchService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Http\HtmlResponse;
-use TYPO3\CMS\Core\Http\ResponseFactory;
-use TYPO3\CMS\Core\Http\StreamFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -22,10 +21,9 @@ final class BibliographyControllerTest extends UnitTestCase
     {
         parent::setUp();
 
-        $methodsToMock = ['indexAction'];
-        $responseFactory = GeneralUtility::makeInstance(ResponseFactory::class);
-        $streamFactory = GeneralUtility::makeInstance(StreamFactory::class);
-        $this->subject = $this->getAccessibleMock(BibliographyController::class, $methodsToMock, [$responseFactory, $streamFactory]);
+        $methodsToMock = ['searchAction'];
+        $elasticSearchService = GeneralUtility::makeInstance(ElasticSearchService::class);
+        $this->subject = $this->getAccessibleMock(BibliographyController::class, $methodsToMock, [$elasticSearchService]);
     }
 
     public function tearDown(): void
@@ -36,9 +34,9 @@ final class BibliographyControllerTest extends UnitTestCase
     /**
      * @test
      */
-    public function indexActionReturnsHtmlResponse(): void
+    public function searchActionReturnsHtmlResponse(): void
     {
-        $result = $this->subject->indexAction();
+        $result = $this->subject->searchAction();
 
         self::assertInstanceOf(ResponseInterface::class, $result);
     }
