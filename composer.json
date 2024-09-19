@@ -12,7 +12,7 @@
         "dikastes/zotero-api": "^1.2",
         "elasticsearch/elasticsearch": "^8",
         "illuminate/collections": "^11",
-        "slub/liszt-common": "@dev"
+        "slub/liszt-common": "^1"
     },
     "require-dev": {
         "phpstan/phpstan": "^1",

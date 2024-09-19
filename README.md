@@ -16,3 +16,10 @@ Then, execute
     $ typo3 liszt_bibliography:index
 
 The plugin may be included on a page using the New Content Element Wizard.
+
+# Logging
+
+When indexing, the module logs successful runs at info level and errors at error
+levels. We recommand that you keep logs at those levels (see
+[here](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ApiOverview/Logging/Configuration/Index.html))
+and check the logs frequently.
