@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Slub\LisztBibliography\Command;
 
-use Elasticsearch\Client;
+use Elastic\Elasticsearch\Client;
 use Hedii\ZoteroApi\ZoteroApi;
 use Illuminate\Support\Collection;
 use Psr\Http\Message\ServerRequestInterface;
