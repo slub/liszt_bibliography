@@ -50,17 +50,20 @@ class IndexCommand extends Command
     protected Collection $locales;
     protected Collection $localizedCitations;
 
-    function __construct(
-        SiteFinder $siteFinder,
+    public function __construct(
+        private readonly SiteFinder $siteFinder,
         private readonly LoggerInterface $logger
-    )
-    {
+    ) {
         parent::__construct();
+        $this->initLocales();
+    }
 
-        $this->locales = Collection::wrap($siteFinder->getAllSites())->
-            map(function (Site $site): array { return $site->getLanguages(); })->
-            flatten()->
-            map(function (SiteLanguage $language): string { return $language->getHreflang(); });
+    private function initLocales(): void
+    {
+        $this->locales = Collection::wrap($this->siteFinder->getAllSites())
+            ->map(function (Site $site): array { return $site->getLanguages(); })
+            ->flatten()
+            ->map(function (SiteLanguage $language): string { return $language->getHreflang(); });
     }
 
     protected function getRequest(): ServerRequestInterface
@@ -90,7 +93,8 @@ class IndexCommand extends Command
             );
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output) {
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
         $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
         $this->client = ElasticClientBuilder::getClient();
         $this->apiKey = $this->extConf['zoteroApiKey'];
@@ -111,11 +115,10 @@ class IndexCommand extends Command
             $this->versionedSync($version);
             $this->logger->info('Versioned data synchronization successful.');
         }
-
-        return 0;
+        return Command::SUCCESS;
     }
 
-    protected function fullSync($input): void
+    protected function fullSync(InputInterface $input): void
     {
         $client = new ZoteroApi($this->extConf['zoteroApiKey']);
         $response = $client->
@@ -133,10 +136,8 @@ class IndexCommand extends Command
         // fetch bibliography items bulkwise
         $this->io->progressStart($this->total);
         $collection = new Collection($response->getBody());
-        $this->bibliographyItems = $collection->
-            pluck('data');
-
-        $cursor = $this->bulkSize;
+        $this->bibliographyItems = $collection->pluck('data');
+        $cursor = 0; // set Cursor to 0, not to bulk size
         $index = $this->extConf['elasticIndexName'];
         try {
             // in older Elasticsearch versions (until 7) exists returns a bool
@@ -158,7 +159,7 @@ class IndexCommand extends Command
 
         $apiCounter = self::API_TRIALS;
 
-        while ($cursor < $this->total + $this->bulkSize) {
+        while ($cursor < $this->total) {
             try {
                 $this->sync($cursor, 0);
 
@@ -198,7 +199,7 @@ class IndexCommand extends Command
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
                     $this->logger->warning('Bibliography sync unseccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    die;
+                    die; // Todo: die ist not recommended, better throw an exception?
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
                 }
@@ -215,7 +216,7 @@ class IndexCommand extends Command
         $this->commitBibliography();
     }
 
-    protected function getVersion($input): int
+    protected function getVersion(InputInterface $input): int
     {
         // if -a is specified, perfom a full update
         if ($input->getOption('all')) {
@@ -260,7 +261,7 @@ class IndexCommand extends Command
                 return 0;
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
-                die;
+                die; // Todo: die ist not recommended, better throw an exception?
             }
         }
     }
