@@ -77,6 +77,12 @@ class IndexCommand extends Command
                 'The version number of the most recently updated data set.'
             )->
             addOption(
+            'total',
+            't',
+            InputOption::VALUE_REQUIRED,
+            'Limit the total number of results for dev purposes and force fullSync.'
+        )->
+            addOption(
                 'all',
                 'a',
                 InputOption::VALUE_NONE,
@@ -98,7 +104,7 @@ class IndexCommand extends Command
         $version = $this->getVersion($input);
         if ($version == 0) {
             $this->io->text('Full data synchronization requested.');
-            $this->fullSync();
+            $this->fullSync($input);
             $this->logger->info('Full data synchronization successful.');
         } else {
             $this->io->text('Synchronizing all data from version ' . $version);
@@ -109,7 +115,7 @@ class IndexCommand extends Command
         return 0;
     }
 
-    protected function fullSync(): void
+    protected function fullSync($input): void
     {
         $client = new ZoteroApi($this->extConf['zoteroApiKey']);
         $response = $client->
@@ -118,7 +124,11 @@ class IndexCommand extends Command
             top()->
             limit(1)->
             send();
-        $this->total = (int) $response->getHeaders()['Total-Results'][0];
+        if ($input->getOption('total')) {
+            $this->total = (int) $input->getOption('total');
+        } else {
+            $this->total = (int) $response->getHeaders()['Total-Results'][0];
+        }
 
         // fetch bibliography items bulkwise
         $this->io->progressStart($this->total);
@@ -212,6 +222,13 @@ class IndexCommand extends Command
             return 0;
         }
 
+        // also set version to 0 for dev tests if the total results are limited
+        if ($input->getOption('total')) {
+            $this->io->text('Total results limited to: '. $input->getOption('total'));
+            return 0;
+        }
+
+
         // if a version is manually specified, perform sync from this version
         $argumentVersion = $input->getArgument('version');
         if ($argumentVersion > 0) {
@@ -236,14 +253,15 @@ class IndexCommand extends Command
         try {
             $response = $this->client->search($params);
             return (int) $response['aggregations']['max_version']['value'];
-        } catch (\Elasticsearch\Common\Exceptions\Missing404Exception $e) {
-            // Index not found, return 0
-            $this->io->note('No Index with name: ' .$this->extConf['elasticIndexName'] . ' found. Return 0 as Version, create new index in next steps...');
-            return 0;
         } catch (\Exception $e) {
-            // Handle other potential exceptions if necessary
-            $this->io->error("Exception: " . $e->getMessage());
-            die;
+            if ($e->getCode() === 404) {
+                // Index not found, return 0
+                $this->io->note('No Index with name: ' . $this->extConf['elasticIndexName'] . ' found. Return 0 as Version, create new index in next steps...');
+                return 0;
+            } else {
+                $this->io->error("Exception: " . $e->getMessage());
+                die;
+            }
         }
     }
 
