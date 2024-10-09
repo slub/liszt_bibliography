@@ -6,9 +6,6 @@ services:
   Slub\LisztBibliography\:
     resource: '../Classes/*'
     exclude: '../Classes/Domain/Model/*'
-  Slub\LisztBibliography\Classes\Controller\BibliographyController:
-    tags:
-      - backend.controller
   Slub\LisztBibliography\Command\IndexCommand:
     tags:
       -

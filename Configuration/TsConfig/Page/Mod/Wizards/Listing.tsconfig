@@ -1,4 +1,4 @@
-mod.wizards.newContentElement.wizardItems {
+/*mod.wizards.newContentElement.wizardItems {
   plugins {
     elements {
       lisztbibliography_bibliographylisting {
@@ -25,4 +25,4 @@ mod.wizards.newContentElement.wizardItems {
     }
     show := addToList(lisztbibliography_listing)
   }
-}
+}*/

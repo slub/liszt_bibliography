@@ -1,9 +1,9 @@
 ######################
 #### DEPENDENCIES ####
 ######################
-<INCLUDE_TYPOSCRIPT: source="FILE:EXT:liszt_common/Configuration/TypoScript/setup.typoscript">
+#<INCLUDE_TYPOSCRIPT: source="FILE:EXT:liszt_common/Configuration/TypoScript/setup.typoscript">
 
-lib.contentElement {
+/*lib.contentElement {
     #layoutRootPaths {
         #200 = EXT:liszt_bibliography:Resources/Private/Layouts
     #}
@@ -13,18 +13,19 @@ lib.contentElement {
     templateRootPaths {
         200 = EXT:liszt_bibliography/Resources/Private/Templates
     }
-}
+}*/
 
-tt_content {
+/*tt_content {
     lisztbibliography_listing =< lib.contentElement
     lisztbibliography_listing {
         templateName = BibliographyListing
     }
-}
+}*/
 
-page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
+# page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
 
 
+/*
 plugin.tx_liszt_common {
     settings {
         searchBarSelectItems {
@@ -34,4 +35,4 @@ plugin.tx_liszt_common {
             }
         }
     }
-}
+}*/
