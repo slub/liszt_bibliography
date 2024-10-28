@@ -27,6 +27,99 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class IndexCommand extends Command
 {
 
+    const HEADER_FIELDS = [
+        [
+            'field' => 'creator.firstName',
+            'conditionField' => 'creator.type',
+            'conditionValue' => 'author',
+            'conditionRelation' => 'eq'
+        ],
+        [
+            'field' => 'creator.lastName',
+            'conditionField' => 'creator.type',
+            'conditionValue' => 'author',
+            'conditionRelation' => 'eq'
+        ]
+    ];
+    const BODY_FIELDS = [
+        [
+            'field' => 'title'
+        ],
+        [
+            'field' => 'shortTitle'
+        ],
+    ];
+    const FOOTER_FIELDS = [
+        [
+            'field' => 'creator.firstName',
+            'conditionField' => 'creator.type',
+            'conditionValue' => 'editor',
+            'conditionRelation' => 'eq'
+        ],
+        [
+            'field' => 'creator.lastName',
+            'conditionField' => 'creator.type',
+            'conditionValue' => 'editor',
+            'conditionRelation' => 'eq'
+        ],
+        [
+            'field' => 'publicationTitle',
+            'conditionField' => 'publicationTitle',
+            'conditionValue' => '',
+            'conditionRelation' => 'neq'
+        ],
+        [
+            'field' => 'bookTitle',
+            'conditionField' => 'bookTitle',
+            'conditionValue' => '',
+            'conditionRelation' => 'neq'
+        ],
+        [
+            'field' => 'university',
+            'conditionField' => 'university',
+            'conditionValue' => '',
+            'conditionRelation' => 'neq'
+        ],
+        [
+            'field' => 'volume',
+            'conditionField' => 'volume',
+            'conditionValue' => '',
+            'conditionRelation' => 'neq'
+        ],
+        [
+            'field' => 'issue',
+            'conditionField' => 'issue',
+            'conditionValue' => '',
+            'conditionRelation' => 'neq'
+        ],
+        [
+            'field' => 'place',
+            'conditionField' => 'place',
+            'conditionValue' => '',
+            'conditionRelation' => 'neq'
+        ],
+        [
+            'field' => 'date',
+            'conditionField' => 'date',
+            'conditionValue' => '',
+            'conditionRelation' => 'neq'
+        ]
+    ];
+    const SEARCHABLE_FIELDS = [
+        'author',
+        'title',
+        'university',
+        'bookTitle',
+        'series',
+        'publicationTitle',
+        'place',
+        'date',
+        'shortTitle'
+    ];
+    const BOOSTED_FIELDS = [
+        'title'
+    ];
+
     protected ZoteroApi $bibApi;
     protected Collection $bibliographyItems;
     protected Client $client;
@@ -116,11 +209,11 @@ class IndexCommand extends Command
         $bulkCount = 0;
         foreach ($this->bibliographyItems as $document) {
             $this->io->progressAdvance();
-            $params['body'][] = [ 'index' => 
-                [ 
+            $params['body'][] = [ 'index' =>
+                [
                     '_index' => $index,
                     '_id' => $document['key']
-                ] 
+                ]
             ];
             $params['body'][] = json_encode($document);
 
@@ -147,11 +240,11 @@ class IndexCommand extends Command
 
         $params = [ 'body' => [] ];
         foreach ($this->locales as $key => $locale) {
-            $params['body'][] = [ 'index' => 
-                [ 
+            $params['body'][] = [ 'index' =>
+                [
                     '_index' => $localeIndex,
                     '_id' => $key
-                ] 
+                ]
             ];
             $params['body'][] = json_encode($locale);
 
