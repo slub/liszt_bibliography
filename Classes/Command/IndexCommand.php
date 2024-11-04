@@ -82,11 +82,11 @@ class IndexCommand extends Command
                 'The version number of the most recently updated data set.'
             )->
             addOption(
-            'total',
-            't',
-            InputOption::VALUE_REQUIRED,
-            'Limit the total number of results for dev purposes and force fullSync.'
-        )->
+                'total',
+                't',
+                InputOption::VALUE_REQUIRED,
+                'Limit the total number of results for dev purposes and force fullSync.'
+            )->
             addOption(
                 'all',
                 'a',
@@ -155,7 +155,7 @@ class IndexCommand extends Command
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
                 $this->logger->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
-                die;
+                throw new \Exception('Bibliography sync unsuccessful.');
             }
         }
 
@@ -177,7 +177,7 @@ class IndexCommand extends Command
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
                     $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    die;
+                    throw new \Exception('Bibliography sync unsuccessful.');
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
                 }
@@ -200,8 +200,8 @@ class IndexCommand extends Command
                 $this->io->newline(1);
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
-                    $this->logger->warning('Bibliography sync unseccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    die; // Todo: die ist not recommended, better throw an exception?
+                    $this->logger->warning('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                    throw new \Exception('Bibliography sync unsuccessful.');
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
                 }
@@ -263,7 +263,7 @@ class IndexCommand extends Command
                 return 0;
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
-                die; // Todo: die ist not recommended, better throw an exception?
+                throw new \Exception('Bibliography sync unsuccessful.');
             }
         }
     }
