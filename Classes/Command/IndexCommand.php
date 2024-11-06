@@ -15,10 +15,11 @@ namespace Slub\LisztBibliography\Command;
 
 use Elastic\Elasticsearch\Client;
 use Hedii\ZoteroApi\ZoteroApi;
-use Illuminate\Support\Collection;
+use Slub\LisztCommon\Common\Collection;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slub\LisztCommon\Common\ElasticClientBuilder;
+use Slub\LisztBibliography\Processing\BibEntryProcessor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -35,6 +36,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class IndexCommand extends Command
 {
 
+    protected ZoteroApi $bibApi;
     const API_TRIALS = 3;
 
     protected string $apiKey;
@@ -80,11 +82,11 @@ class IndexCommand extends Command
                 'The version number of the most recently updated data set.'
             )->
             addOption(
-            'total',
-            't',
-            InputOption::VALUE_REQUIRED,
-            'Limit the total number of results for dev purposes and force fullSync.'
-        )->
+                'total',
+                't',
+                InputOption::VALUE_REQUIRED,
+                'Limit the total number of results for dev purposes and force fullSync.'
+            )->
             addOption(
                 'all',
                 'a',
@@ -153,7 +155,7 @@ class IndexCommand extends Command
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
                 $this->logger->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
-                die;
+                throw new \Exception('Bibliography sync unsuccessful.');
             }
         }
 
@@ -175,7 +177,7 @@ class IndexCommand extends Command
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
                     $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    die;
+                    throw new \Exception('Bibliography sync unsuccessful.');
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
                 }
@@ -198,8 +200,8 @@ class IndexCommand extends Command
                 $this->io->newline(1);
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
-                    $this->logger->warning('Bibliography sync unseccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    die; // Todo: die ist not recommended, better throw an exception?
+                    $this->logger->warning('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                    throw new \Exception('Bibliography sync unsuccessful.');
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
                 }
@@ -261,7 +263,7 @@ class IndexCommand extends Command
                 return 0;
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
-                die; // Todo: die ist not recommended, better throw an exception?
+                throw new \Exception('Bibliography sync unsuccessful.');
             }
         }
     }
@@ -333,24 +335,8 @@ class IndexCommand extends Command
     {
         $this->dataSets = $this->bibliographyItems->
             map(function($bibliographyItem) {
-                return self::buildDataSet($bibliographyItem, $this->localizedCitations, $this->teiDataSets);
+                return BibEntryProcessor::process($bibliographyItem, $this->localizedCitations, $this->teiDataSets);
             });
-    }
-
-    protected static function buildDataSet(
-        array $bibliographyItem,
-        Collection $localizedCitations,
-        Collection $teiDataSets
-    )
-    {
-        $key = $bibliographyItem['key'];
-        $bibliographyItem['localizedCitations'] = [];
-        foreach ($localizedCitations as $locale => $localizedCitation) {
-            $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
-        }
-        $bibliographyItem['tei'] = $teiDataSets->get($key);
-
-        return $bibliographyItem;
     }
 
     protected function commitBibliography(): void
@@ -380,4 +366,29 @@ class IndexCommand extends Command
         $this->client->bulk($params);
     }
 
+    protected function commitLocales(): void
+    {
+        $localeIndex = $this->extConf['elasticLocaleIndexName'];
+        $this->io->text('Committing the ' . $localeIndex . ' index');
+
+        if ($this->client->indices()->exists(['index' => $localeIndex])) {
+            $this->client->indices()->delete(['index' => $localeIndex]);
+            $this->client->indices()->create(['index' => $localeIndex]);
+        }
+
+        $params = [ 'body' => [] ];
+        foreach ($this->locales as $key => $locale) {
+            $params['body'][] = [ 'index' =>
+                [
+                    '_index' => $localeIndex,
+                    '_id' => $key
+                ]
+            ];
+            $params['body'][] = json_encode($locale);
+
+        }
+        $this->client->bulk($params);
+
+        $this->io->text('done');
+    }
 }
