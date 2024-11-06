@@ -339,22 +339,6 @@ class IndexCommand extends Command
             });
     }
 
-    protected static function buildDataSet(
-        array $bibliographyItem,
-        Collection $localizedCitations,
-        Collection $teiDataSets
-    ): Collection
-    {
-        $key = $bibliographyItem['key'];
-        $bibliographyItem['localizedCitations'] = [];
-        foreach ($localizedCitations as $locale => $localizedCitation) {
-            $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
-        }
-        $bibliographyItem['tei'] = $teiDataSets->get($key);
-
-        return $bibliographyItem;
-    }
-
     protected function commitBibliography(): void
     {
         if ($this->dataSets->count() == 0) {
