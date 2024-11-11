@@ -33,6 +33,9 @@ class BibEntryProcessor
         }
         $bibliographyItem['tei'] = $teiDataSets->get($key);
         $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::HEADER_FIELDS);
+        if ($bibliographyItem['tx_lisztcommon_header'] == '') {
+            $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::ALT_HEADER_FIELDS);
+        }
         $bibliographyItem['tx_lisztcommon_body'] = self::buildListingField($bibliographyItem, BibEntryConfig::BODY_FIELDS);
         $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::FOOTER_FIELDS);
         $bibliographyItem['tx_lisztcommon_searchable'] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
