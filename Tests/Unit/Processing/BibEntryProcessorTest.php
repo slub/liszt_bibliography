@@ -19,12 +19,13 @@ final class BibEntryProcessorTest extends UnitTestCase
 {
     private ?BibEntryProcessor $subject = null;
     private array $exampleBookArray = [];
+    private array $exampleBookWithoutAuthorArray = [];
     private array $exampleBookSectionArray = [];
     private array $exampleArticleArray = [];
 
     private string $authorFirstName = 'ex_author_first';
     private string $authorLastName = 'ex_author_last';
-    private string $editorFirstName = 'ex_edior_first';
+    private string $editorFirstName = 'ex_editor_first';
     private string $editorLastName = 'ex_editor_last';
     private string $title = 'ex_title';
     private string $bookTitle = 'ex_book_title';
@@ -35,6 +36,7 @@ final class BibEntryProcessorTest extends UnitTestCase
     private string $issue = 'ex_issue';
 
     private string $exampleBook = '';
+    private string $exampleBookWithoutAuthor = '';
     private string $exampleArticle = '';
     private string $exampleBookSection = '';
 
@@ -53,6 +55,24 @@ final class BibEntryProcessorTest extends UnitTestCase
                         "creatorType": "author",
                         "firstName": "$this->authorFirstName",
                         "lastName": "$this->authorLastName"
+                    }
+                ],
+                "place": "$this->place",
+                "date": "$this->date"
+            }
+            JSON;
+
+        $this->exampleBookWithoutAuthor =
+            <<<JSON
+            {
+                "key": "key",
+                "itemType": "book",
+                "title": "$this->title",
+                "creators": [
+                    {
+                        "creatorType": "editor",
+                        "firstName": "$this->editorFirstName",
+                        "lastName": "$this->editorLastName"
                     }
                 ],
                 "place": "$this->place",
@@ -108,6 +128,7 @@ final class BibEntryProcessorTest extends UnitTestCase
 
         $this->subject = GeneralUtility::makeInstance(BibEntryProcessor::class);
         $this->exampleBookArray = json_decode($this->exampleBook, true);
+        $this->exampleBookWithoutAuthorArray = json_decode($this->exampleBookWithoutAuthor, true);
         $this->exampleArticleArray = json_decode($this->exampleArticle, true);
         $this->exampleBookSectionArray = json_decode($this->exampleBookSection, true);
     }
@@ -125,11 +146,15 @@ final class BibEntryProcessorTest extends UnitTestCase
         $book = $this->subject->process($this->exampleBookArray, new Collection(), new Collection());
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
         $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
-        $expected = Str::of($this->authorLastName . ', ' . $this->authorFirstName);
+        $bookWithoutAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, new Collection(), new Collection());
+
+        $expected = Str::of($this->authorFirstName . ' ' . $this->authorLastName);
+        $expectedWithoutAuthor = Str::of($this->editorFirstName . ' ' . $this->editorLastName . ' (Hg.)');
 
         self::assertEquals($book['tx_lisztcommon_header'], $expected);
         self::assertEquals($bookSection['tx_lisztcommon_header'], $expected);
         self::assertEquals($article['tx_lisztcommon_header'], $expected);
+        self::assertEquals($bookWithoutAuthor['tx_lisztcommon_header'], $expectedWithoutAuthor);
     }
 
     /**
@@ -163,10 +188,10 @@ final class BibEntryProcessorTest extends UnitTestCase
     public function bookSectionFooterIsProcessedCorrectly(): void
     {
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
-        $expected = Str::of($this->editorFirstName . ' ' . $this->editorLastName . ': ' .
-            $this->bookTitle . ', ' . $this->place . ' ' . $this->date . ' ' . $this->pages);
+        $expected = Str::of('In ' . $this->bookTitle . ', ' . 'hg. von ' . $this->editorFirstName . ' ' . $this->editorLastName .
+            ', ' . $this->place . ' ' . $this->date . ', ' . $this->pages);
 
-        self::assertEquals($bookSection['tx_lisztcommon_body'], $this->title);
+        self::assertEquals($bookSection['tx_lisztcommon_footer'], $expected);
     }
 
     /**
@@ -175,9 +200,10 @@ final class BibEntryProcessorTest extends UnitTestCase
     public function articleFooterIsProcessedCorrectly(): void
     {
         $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
-        $expected = Str::of($this->bookTitle . ', ' . $this->volume . '(' . $this->issue . ')' . $this->pages);
+        $expected = Str::of($this->bookTitle . ' ' . $this->volume . ' (' . $this->date . '), Nr. ' . $this->issue . ', ' . $this->pages);
+        var_dump($article['tx_lisztcommon_footer']);
 
-        self::assertEquals($article['tx_lisztcommon_body'], $this->title);
+        self::assertEquals($article['tx_lisztcommon_footer'], $expected);
     }
 
 
