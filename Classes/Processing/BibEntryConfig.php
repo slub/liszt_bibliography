@@ -61,13 +61,13 @@ class BibEntryConfig
                 [
                     'field' => 'firstName',
                     'conditionField' => 'creatorType',
-                    'conditionValue' => 'editor',
+                    'conditionValue' => 'translator',
                     'conditionRelation' => 'eq'
                 ],
                 [
                     'field' => 'lastName',
                     'conditionField' => 'creatorType',
-                    'conditionValue' => 'editor',
+                    'conditionValue' => 'translator',
                     'conditionRelation' => 'eq'
                 ]
             ],
@@ -132,7 +132,7 @@ class BibEntryConfig
 
     public static function getEditorHeader(): array
     {
-        return [ self::postfix(self::EDITOR, '(Hg.)') ];
+        return [ self::postfix(self::EDITOR, ' (Hg.)') ];
     }
 
     public static function getBody(): array
@@ -146,7 +146,7 @@ class BibEntryConfig
             self::postfix(self::PUBLICATION_TITLE, ' '),
             self::postfix(self::VOLUME, ' '),
             self::circumfix(self::DATE, '(', '), '),
-            self::circumfix(self::VOLUME, 'Nr. ', ', '),
+            self::circumfix(self::ISSUE, 'Nr. ', ', '),
             self::PAGES
         ];
     }
