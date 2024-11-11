@@ -32,12 +32,26 @@ class BibEntryProcessor
             $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
         }
         $bibliographyItem['tei'] = $teiDataSets->get($key);
-        $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::HEADER_FIELDS);
+        $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::getAuthorHeader());
         if ($bibliographyItem['tx_lisztcommon_header'] == '') {
-            $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::ALT_HEADER_FIELDS);
+            $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::getEditorHeader());
         }
-        $bibliographyItem['tx_lisztcommon_body'] = self::buildListingField($bibliographyItem, BibEntryConfig::BODY_FIELDS);
-        $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::FOOTER_FIELDS);
+        $bibliographyItem['tx_lisztcommon_body'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBody());
+        switch($bibliographyItem['itemType']) {
+            case 'book':
+                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
+                break;
+            case 'bookSection':
+                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookSectionFooter());
+                break;
+            case 'journalArticle':
+                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getArticleFooter());
+                break;
+            case 'thesis':
+                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
+                break;
+        }
+
         $bibliographyItem['tx_lisztcommon_searchable'] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
         $bibliographyItem['tx_lisztcommon_boosted'] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
 
