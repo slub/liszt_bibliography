@@ -38,6 +38,29 @@ class BibEntryConfig
             ]
         ]
     ];
+    const ALT_HEADER_FIELDS = [
+        [
+            'compound' => [
+                'fields' => [
+                    [
+                        'field' => 'firstName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'editor',
+                        'conditionRelation' => 'eq'
+                    ],
+                    [
+                        'field' => 'lastName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'editor',
+                        'conditionRelation' => 'eq'
+                    ]
+                ],
+                'field' => 'creators',
+                'separator' => ', ',
+                'reverseFirst' => true
+            ]
+        ]
+    ];
     const BODY_FIELDS = [
         [
             'field' => 'title',

@@ -19,6 +19,7 @@ final class BibEntryProcessorTest extends UnitTestCase
 {
     private ?BibEntryProcessor $subject = null;
     private array $exampleBookArray = [];
+    private array $exampleBookWithoutAuthorArray = [];
     private array $exampleBookSectionArray = [];
     private array $exampleArticleArray = [];
 
@@ -35,6 +36,7 @@ final class BibEntryProcessorTest extends UnitTestCase
     private string $issue = 'ex_issue';
 
     private string $exampleBook = '';
+    private string $exampleBookWithoutAuthor = '';
     private string $exampleArticle = '';
     private string $exampleBookSection = '';
 
@@ -53,6 +55,24 @@ final class BibEntryProcessorTest extends UnitTestCase
                         "creatorType": "author",
                         "firstName": "$this->authorFirstName",
                         "lastName": "$this->authorLastName"
+                    }
+                ],
+                "place": "$this->place",
+                "date": "$this->date"
+            }
+            JSON;
+
+        $this->exampleBookWithoutAuthor =
+            <<<JSON
+            {
+                "key": "key",
+                "itemType": "book",
+                "title": "$this->title",
+                "creators": [
+                    {
+                        "creatorType": "editor",
+                        "firstName": "$this->editorFirstName",
+                        "lastName": "$this->editorLastName"
                     }
                 ],
                 "place": "$this->place",
@@ -108,6 +128,7 @@ final class BibEntryProcessorTest extends UnitTestCase
 
         $this->subject = GeneralUtility::makeInstance(BibEntryProcessor::class);
         $this->exampleBookArray = json_decode($this->exampleBook, true);
+        $this->exampleBookWithoutAuthorArray = json_decode($this->exampleBookWithoutAuthor, true);
         $this->exampleArticleArray = json_decode($this->exampleArticle, true);
         $this->exampleBookSectionArray = json_decode($this->exampleBookSection, true);
     }
@@ -125,11 +146,15 @@ final class BibEntryProcessorTest extends UnitTestCase
         $book = $this->subject->process($this->exampleBookArray, new Collection(), new Collection());
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
         $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
+        $bookWithoutAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, new Collection(), new Collection());
+
         $expected = Str::of($this->authorLastName . ', ' . $this->authorFirstName);
+        $expectedWithoutAuthor = Str::of($this->editorLastName . ', ' . $this->editorFirstName);
 
         self::assertEquals($book['tx_lisztcommon_header'], $expected);
         self::assertEquals($bookSection['tx_lisztcommon_header'], $expected);
         self::assertEquals($article['tx_lisztcommon_header'], $expected);
+        self::assertEquals($bookWithoutAuthor['tx_lisztcommon_header'], $expectedWithoutAuthor);
     }
 
     /**
