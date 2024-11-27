@@ -49,13 +49,20 @@ plugin.tx_lisztcommon_searchlisting {
             type = terms
           }
           3 {
-            field = journalTitle
+            field = publicationTitle
             type = terms
           }
           4 {
-            field = creator
+            field = creators
             type = nested
-            script = example
+            script (
+              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
+              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
+              if (firstName == '' && lastName == '') {
+                  return null;
+              }
+              return (firstName + ' ' + lastName).trim();
+            )
           }
         }
       }
