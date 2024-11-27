@@ -16,8 +16,9 @@ namespace Slub\LisztBibliography\Processing;
 use Illuminate\Support\Stringable;
 use Illuminate\Support\Str;
 use Slub\LisztCommon\Common\Collection;
+use Slub\LisztCommon\Processing\IndexProcessor;
 
-class BibEntryProcessor
+class BibEntryProcessor extends IndexProcessor
 {
 
     public static function process(
@@ -32,28 +33,28 @@ class BibEntryProcessor
             $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
         }
         $bibliographyItem['tei'] = $teiDataSets->get($key);
-        $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::getAuthorHeader());
-        if ($bibliographyItem['tx_lisztcommon_header'] == '') {
-            $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::getEditorHeader());
+        $bibliographyItem[self::HEADER_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::getAuthorHeader());
+        if ($bibliographyItem[self::HEADER_FIELD] == '') {
+            $bibliographyItem[self::HEADER_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::getEditorHeader());
         }
-        $bibliographyItem['tx_lisztcommon_body'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBody());
-        switch($bibliographyItem['itemType']) {
+        $bibliographyItem[self::BODY_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::getBody());
+        switch($bibliographyItem[self::TYPE_FIELD]) {
             case 'book':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
                 break;
             case 'bookSection':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookSectionFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookSectionFooter());
                 break;
             case 'journalArticle':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getArticleFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::getArticleFooter());
                 break;
             case 'thesis':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
                 break;
         }
 
-        $bibliographyItem['tx_lisztcommon_searchable'] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
-        $bibliographyItem['tx_lisztcommon_boosted'] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
+        $bibliographyItem[self::SEARCHABLE_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
+        $bibliographyItem[self::BOOSTED_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
 
         return $bibliographyItem;
     }

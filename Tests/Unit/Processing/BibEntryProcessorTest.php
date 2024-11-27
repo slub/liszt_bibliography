@@ -80,6 +80,24 @@ final class BibEntryProcessorTest extends UnitTestCase
             }
             JSON;
 
+        $this->exampleBookWithAnonymousAuthor =
+            <<<JSON
+            {
+                "key": "key",
+                "itemType": "book",
+                "title": "$this->title",
+                "creators": [
+                    {
+                        "creatorType": "editor",
+                        "firstName": "",
+                        "lastName": "$this->editorLastName"
+                    }
+                ],
+                "place": "$this->place",
+                "date": "$this->date"
+            }
+            JSON;
+
         $this->exampleArticle =
             <<<JSON
             {
@@ -147,14 +165,17 @@ final class BibEntryProcessorTest extends UnitTestCase
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
         $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
         $bookWithoutAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, new Collection(), new Collection());
+        $bookWithAnonymousAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, new Collection(), new Collection());
 
         $expected = Str::of($this->authorFirstName . ' ' . $this->authorLastName);
         $expectedWithoutAuthor = Str::of($this->editorFirstName . ' ' . $this->editorLastName . ' (Hg.)');
+        $expectedWithAnonymousAuthor = Str::of($this->authorLastName . ' (Hg.)');
 
         self::assertEquals($book['tx_lisztcommon_header'], $expected);
         self::assertEquals($bookSection['tx_lisztcommon_header'], $expected);
         self::assertEquals($article['tx_lisztcommon_header'], $expected);
         self::assertEquals($bookWithoutAuthor['tx_lisztcommon_header'], $expectedWithoutAuthor);
+        self::assertEquals($bookWithAnonymousAuthor['tx_lisztcommon_header'], $expectedWithAnonymousAuthor);
     }
 
     /**
