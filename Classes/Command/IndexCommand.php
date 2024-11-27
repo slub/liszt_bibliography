@@ -20,6 +20,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slub\LisztCommon\Common\ElasticClientBuilder;
 use Slub\LisztBibliography\Processing\BibEntryProcessor;
+use Slub\LisztBibliography\Processing\BibElasticMapping;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -73,6 +74,8 @@ class IndexCommand extends Command
         return $GLOBALS['TYPO3_REQUEST'];
     }
 
+
+    //  ddev typo3 liszt-bibliography:index -t 100   // index only 100 docs for testing and dev
     protected function configure(): void
     {
         $this->setDescription('Create elasticsearch index from zotero bibliography')->
@@ -141,17 +144,19 @@ class IndexCommand extends Command
         $this->bibliographyItems = $collection->pluck('data');
         $cursor = 0; // set Cursor to 0, not to bulk size
         $index = $this->extConf['elasticIndexName'];
+        $mappingParams = BibElasticMapping::getMappingParams($index);
+
         try {
             // in older Elasticsearch versions (until 7) exists returns a bool
             if ($this->client->indices()->exists(['index' => $index])) {
                 $this->client->indices()->delete(['index' => $index]);
-                $this->client->indices()->create(['index' => $index]);
+                $this->client->indices()->create($mappingParams);
             }
         } catch (\Exception $e) {
             // other versions return a Message object
             if ($e->getCode() === 404) {
                 $this->io->note("Index: " . $index . " does not exist. Trying to create new index.");
-                $this->client->indices()->create(['index' => $index]);
+                $this->client->indices()->create($mappingParams);
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
                 $this->logger->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
@@ -348,6 +353,7 @@ class IndexCommand extends Command
         $index = $this->extConf['elasticIndexName'];
 
         $params = [ 'body' => [] ];
+
         $bulkCount = 0;
         foreach ($this->dataSets as $document) {
             $params['body'][] = [ 'index' =>
@@ -366,7 +372,7 @@ class IndexCommand extends Command
         $this->client->bulk($params);
     }
 
-    protected function commitLocales(): void
+/*    protected function commitLocales(): void
     {
         $localeIndex = $this->extConf['elasticLocaleIndexName'];
         $this->io->text('Committing the ' . $localeIndex . ' index');
@@ -390,5 +396,5 @@ class IndexCommand extends Command
         $this->client->bulk($params);
 
         $this->io->text('done');
-    }
+    }*/
 }
