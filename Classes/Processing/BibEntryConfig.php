@@ -124,6 +124,12 @@ class BibEntryConfig
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+    const NUMBER_OF_VOLUMES = [
+        'field' => 'numberOfVolumes',
+        'conditionField' => 'pages',
+        'conditionValue' => '',
+        'conditionRelation' => 'neq'
+    ];
 
     public static function getAuthorHeader(): array
     {
@@ -155,7 +161,8 @@ class BibEntryConfig
     {
         return [
             self::circumfix(self::BOOK_TITLE, 'In ', ', '),
-            self::postfix(self::VOLUME, ', '),
+            self::circumfix(self::VOLUME, 'Bd. ', ', '),
+            self::postfix(self::NUMBER_OF_VOLUMES, 'Bde., '),
             self::circumfix(self::EDITOR, 'hg. von ', ', '),
             self::circumfix(self::TRANSLATOR, 'übers. von ', ', '),
             self::postfix(self::PLACE, ' '),
