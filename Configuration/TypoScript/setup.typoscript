@@ -24,15 +24,48 @@
 
 # page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
 
-
-/*
-plugin.tx_liszt_common {
-    settings {
-        searchBarSelectItems {
-            1:{
-                label = Literatur
-                href = #
-            }
+plugin.tx_lisztcommon_searchlisting {
+  settings {
+    entityTypes {
+      1 {
+        # the key which leads to the entity type name translation in the locallang file
+        labelKey = bibliography
+        # the current extension name, needed for translation of label key
+        extensionName = liszt_bibliography
+        # the name of the entity index
+        indexName = zotero
+        # the filter fields
+        filters {
+          0 {
+            field = itemType
+            type = terms
+          }
+          1 {
+            field = place
+            type = terms
+          }
+          2 {
+            field = date
+            type = terms
+          }
+          3 {
+            field = publicationTitle
+            type = terms
+          }
+          4 {
+            field = creators
+            type = nested
+            script (
+              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
+              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
+              if (firstName == '' && lastName == '') {
+                  return null;
+              }
+              return (firstName + ' ' + lastName).trim();
+            )
+          }
         }
+      }
     }
-}*/
+  }
+}
