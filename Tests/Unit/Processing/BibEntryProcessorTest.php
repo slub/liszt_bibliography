@@ -20,6 +20,7 @@ final class BibEntryProcessorTest extends UnitTestCase
     private ?BibEntryProcessor $subject = null;
     private array $exampleBookArray = [];
     private array $exampleBookWithoutAuthorArray = [];
+    private array $exampleBookWithAnonymousAuthorArray = [];
     private array $exampleBookSectionArray = [];
     private array $exampleArticleArray = [];
 
@@ -37,6 +38,7 @@ final class BibEntryProcessorTest extends UnitTestCase
 
     private string $exampleBook = '';
     private string $exampleBookWithoutAuthor = '';
+    private string $exampleBookWithAnonymousAuthor = '';
     private string $exampleArticle = '';
     private string $exampleBookSection = '';
 
@@ -88,9 +90,9 @@ final class BibEntryProcessorTest extends UnitTestCase
                 "title": "$this->title",
                 "creators": [
                     {
-                        "creatorType": "editor",
+                        "creatorType": "author",
                         "firstName": "",
-                        "lastName": "$this->editorLastName"
+                        "lastName": "$this->authorLastName"
                     }
                 ],
                 "place": "$this->place",
@@ -147,6 +149,7 @@ final class BibEntryProcessorTest extends UnitTestCase
         $this->subject = GeneralUtility::makeInstance(BibEntryProcessor::class);
         $this->exampleBookArray = json_decode($this->exampleBook, true);
         $this->exampleBookWithoutAuthorArray = json_decode($this->exampleBookWithoutAuthor, true);
+        $this->exampleBookWithAnonymousAuthorArray = json_decode($this->exampleBookWithAnonymousAuthor, true);
         $this->exampleArticleArray = json_decode($this->exampleArticle, true);
         $this->exampleBookSectionArray = json_decode($this->exampleBookSection, true);
     }
@@ -165,11 +168,11 @@ final class BibEntryProcessorTest extends UnitTestCase
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
         $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
         $bookWithoutAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, new Collection(), new Collection());
-        $bookWithAnonymousAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, new Collection(), new Collection());
+        $bookWithAnonymousAuthor = $this->subject->process($this->exampleBookWithAnonymousAuthorArray, new Collection(), new Collection());
 
         $expected = Str::of($this->authorFirstName . ' ' . $this->authorLastName);
         $expectedWithoutAuthor = Str::of($this->editorFirstName . ' ' . $this->editorLastName . ' (Hg.)');
-        $expectedWithAnonymousAuthor = Str::of($this->authorLastName . ' (Hg.)');
+        $expectedWithAnonymousAuthor = Str::of($this->authorLastName);
 
         self::assertEquals($book['tx_lisztcommon_header'], $expected);
         self::assertEquals($bookSection['tx_lisztcommon_header'], $expected);
