@@ -219,9 +219,9 @@ final class BibEntryProcessorTest extends UnitTestCase
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
         $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
 
-        self::assertEquals($book['tx_lisztcommon_body'], Str::of($this->title));
-        self::assertEquals($bookSection['tx_lisztcommon_body'], Str::of($this->title));
-        self::assertEquals($article['tx_lisztcommon_body'], Str::of($this->title));
+        self::assertEquals(Str::of($this->title), $book['tx_lisztcommon_body']);
+        self::assertEquals(Str::of($this->title), $bookSection['tx_lisztcommon_body']);
+        self::assertEquals(Str::of($this->title), $article['tx_lisztcommon_body']);
     }
 
     /**
@@ -233,12 +233,13 @@ final class BibEntryProcessorTest extends UnitTestCase
         $expected = Str::of(
             'hg. von ' . $this->editorFirstName . ' ' . $this->editorLastName . ', ' .
             'übers. von ' . $this->translatorFirstName . ' ' . $this->translatorLastName . ', ' .
+            $this->numberOfVolumes . 'Bde., ' .
             'Bd. ' . $this->volume . ', ' .
             $this->place . ' ' .
             $this->date
         );
 
-        self::assertEquals($book['tx_lisztcommon_footer'], $expected);
+        self::assertEquals($expected, $book['tx_lisztcommon_footer']);
     }
 
     /**
@@ -249,15 +250,16 @@ final class BibEntryProcessorTest extends UnitTestCase
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
         $expected = Str::of(
             'In ' . $this->bookTitle . ', ' .
-            'Bd. ' . $this->volume . ', ' .
             'hg. von ' . $this->editorFirstName . ' ' . $this->editorLastName . ', ' .
             'übers. von ' . $this->translatorFirstName . ' ' . $this->translatorLastName . ', ' .
+            $this->numberOfVolumes . 'Bde., ' .
+            'Bd. ' . $this->volume . ', ' .
             $this->place . ' ' .
             $this->date . ', ' .
             $this->pages
         );
 
-        self::assertEquals($bookSection['tx_lisztcommon_footer'], $expected);
+        self::assertEquals($expected, $bookSection['tx_lisztcommon_footer']);
     }
 
     /**
@@ -274,7 +276,7 @@ final class BibEntryProcessorTest extends UnitTestCase
             $this->pages
         );
 
-        self::assertEquals($article['tx_lisztcommon_footer'], $expected);
+        self::assertEquals($expected, $article['tx_lisztcommon_footer']);
     }
 
 
