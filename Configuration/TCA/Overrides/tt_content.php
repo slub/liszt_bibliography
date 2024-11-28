@@ -7,13 +7,13 @@ use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 defined('TYPO3') or die();
 
-ExtensionUtility::registerPlugin(
+/*ExtensionUtility::registerPlugin(
     'liszt_bibliography',
     'BibliographyListing',
     'Liszt Bibliography Listing'
-);
+);*/
 
-ExtensionManagementUtility::addTcaSelectItem(
+/*ExtensionManagementUtility::addTcaSelectItem(
     'tt_content',
     'CType',
     [
@@ -21,9 +21,9 @@ ExtensionManagementUtility::addTcaSelectItem(
         'lisztbibliography_listing',
         'content-text'
     ]
-);
+);*/
 
-$GLOBALS['TCA']['tt_content']['types']['lisztbibliography_listing'] = [
+/*$GLOBALS['TCA']['tt_content']['types']['lisztbibliography_listing'] = [
     'showitem' => '
         --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:general,
            --palette--;;general,
@@ -41,5 +41,5 @@ $GLOBALS['TCA']['tt_content']['types']['lisztbibliography_listing'] = [
             ]
         ]
     ]
-];
-        
+];*/
+

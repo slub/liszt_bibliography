@@ -8,13 +8,13 @@ use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 defined('TYPO3') or die();
 
-ExtensionUtility::configurePlugin(
+/*ExtensionUtility::configurePlugin(
     'LisztBibliography',
     'BibliographyListing',
     [ BibliographyController::class => 'index' ],
     [ BibliographyController::class => 'index' ]
-);
+);*/
 
-ExtensionManagementUtility::addPageTSConfig(
+/*ExtensionManagementUtility::addPageTSConfig(
     '<INCLUDE_TYPOSCRIPT: source="FILE:EXT:liszt_bibliography/Configuration/TsConfig/Page/Mod/Wizards/Listing.tsconfig">'
-);
+);*/

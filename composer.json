@@ -6,11 +6,18 @@
         "GPL-2.0-or-later"
     ],
     "require": {
-        "typo3/cms-core": "^11.5",
-        "typo3/cms-fluid-styled-content": "^11.5",
-        "slub/liszt-common": "@dev",
-        "dikastes/zotero-api": "@dev",
-        "illuminate/collections": "^8"
+        "typo3/cms-core": "^12",
+        "typo3/cms-fluid-styled-content": "^12",
+        "typo3/cms-scheduler": "^12",
+        "dikastes/zotero-api": "^1.2",
+        "elasticsearch/elasticsearch": "^8",
+        "illuminate/collections": "^11",
+        "slub/liszt-common": "@dev"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1",
+        "phpunit/phpunit": "^9",
+        "typo3/testing-framework": "^7"
     },
     "autoload": {
         "psr-4": {
@@ -20,6 +27,34 @@
     "extra": {
         "typo3/cms": {
             "extension-key": "liszt_bibliography"
+        }
+    },
+    "scripts": {
+        "ci": [ "@ci:install", "@ci:php", "@ci:tests" ],
+        "ci:php": [ "@ci:php:stan" ],
+        "ci:php:stan": [ "Build/Scripts/runTests.sh -s phpstan -b docker" ],
+        "ci:tests": [ "@ci:tests:unit", "@ci:tests:functional" ],
+        "ci:tests:unit": [ "Build/Scripts/runTests.sh -s unit -b docker" ],
+        "ci:tests:functional": [ "Build/Scripts/runTests.sh -s functional -b docker" ],
+        "ci:install": [ "Build/Scripts/runTests.sh -s composerInstall -b docker" ]
+    },
+    "config": {
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true,
+            "php-http/discovery": true
+        },
+        "vendor-dir": "vendor",
+        "bin-dir": "bin"
+    },
+    "repositories": {
+        "api": {
+            "type": "git",
+            "url": "https://github.com/dikastes/zotero-api"
+        },
+        "common": {
+            "type": "git",
+            "url": "https://github.com/dikastes/liszt_common"
         }
     }
 }

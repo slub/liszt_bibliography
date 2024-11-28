@@ -13,114 +13,354 @@ declare(strict_types=1);
 
 namespace Slub\LisztBibliography\Command;
 
-use Elasticsearch\Client;
+use Elastic\Elasticsearch\Client;
 use Hedii\ZoteroApi\ZoteroApi;
-use Illuminate\Support\Collection;
+use Slub\LisztCommon\Common\Collection;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
 use Slub\LisztCommon\Common\ElasticClientBuilder;
+use Slub\LisztBibliography\Processing\BibEntryProcessor;
+use Slub\LisztBibliography\Processing\BibElasticMapping;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Localization\Locale;
+use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class IndexCommand extends Command
 {
 
     protected ZoteroApi $bibApi;
+    const API_TRIALS = 3;
+
+    protected string $apiKey;
     protected Collection $bibliographyItems;
+    protected Collection $deletedItems;
+    protected Collection $teiDataSets;
+    protected Collection $dataSets;
     protected Client $client;
     protected array $extConf;
     protected SymfonyStyle $io;
-    protected ZoteroApi $localeApi;
-    protected array $locales;
+    protected int $bulkSize;
+    protected int $total;
+    protected Collection $locales;
+    protected Collection $localizedCitations;
 
-    protected function configure(): void
-    {
-        $this->setDescription('Create elasticsearch index from zotero bibliography');
+    public function __construct(
+        private readonly SiteFinder $siteFinder,
+        private readonly LoggerInterface $logger
+    ) {
+        parent::__construct();
+        $this->initLocales();
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output) {
-		$this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
+    private function initLocales(): void
+    {
+        $this->locales = Collection::wrap($this->siteFinder->getAllSites())
+            ->map(function (Site $site): array { return $site->getLanguages(); })
+            ->flatten()
+            ->map(function (SiteLanguage $language): string { return $language->getHreflang(); });
+    }
+
+    protected function getRequest(): ServerRequestInterface
+    {
+        return $GLOBALS['TYPO3_REQUEST'];
+    }
+
+
+    //  ddev typo3 liszt-bibliography:index -t 100   // index only 100 docs for testing and dev
+    protected function configure(): void
+    {
+        $this->setDescription('Create elasticsearch index from zotero bibliography')->
+            addArgument(
+                'version',
+                InputArgument::OPTIONAL,
+                'The version number of the most recently updated data set.'
+            )->
+            addOption(
+                'total',
+                't',
+                InputOption::VALUE_REQUIRED,
+                'Limit the total number of results for dev purposes and force fullSync.'
+            )->
+            addOption(
+                'all',
+                'a',
+                InputOption::VALUE_NONE,
+                'Set all if all data sets should be updated.'
+            );
+    }
+
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
         $this->client = ElasticClientBuilder::getClient();
-        $this->bibApi = new ZoteroApi($this->extConf['zoteroApiKey']);
-        $this->localeApi = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $this->apiKey = $this->extConf['zoteroApiKey'];
         $this->io = new SymfonyStyle($input, $output);
         $this->io->title($this->getDescription());
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io->section('Fetching Bibliography Data');
-        $this->fetchBibliography();
-        $this->io->section('Committing Bibliography Data');
-        $this->commitBibliography();
-        $this->io->section('Committing Locale Data');
-        $this->commitLocales();
-        return 0;
+        $this->bulkSize = (int) $this->extConf['zoteroBulkSize'];
+        $version = $this->getVersion($input);
+        if ($version == 0) {
+            $this->io->text('Full data synchronization requested.');
+            $this->fullSync($input);
+            $this->logger->info('Full data synchronization successful.');
+        } else {
+            $this->io->text('Synchronizing all data from version ' . $version);
+            $this->versionedSync($version);
+            $this->logger->info('Versioned data synchronization successful.');
+        }
+        return Command::SUCCESS;
     }
 
-    protected function fetchBibliography(): void
+    protected function fullSync(InputInterface $input): void
     {
-        // fetch locales
-        $response = $this->localeApi->
-            raw('https://api.zotero.org/schema?format=json')->
-            send();
-        $this->locales = $response->getBody()['locales'];
-
-        // get bulk size and total size
-        $bulkSize = (int) $this->extConf['zoteroBulkSize'];
-        $response = $this->bibApi->
+        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $response = $client->
             group($this->extConf['zoteroGroupId'])->
             items()->
             top()->
             limit(1)->
             send();
-        $total = (int) $response->getHeaders()['Total-Results'][0];
+        if ($input->getOption('total')) {
+            $this->total = (int) $input->getOption('total');
+        } else {
+            $this->total = (int) $response->getHeaders()['Total-Results'][0];
+        }
 
         // fetch bibliography items bulkwise
-        $this->io->progressStart($total);
+        $this->io->progressStart($this->total);
         $collection = new Collection($response->getBody());
         $this->bibliographyItems = $collection->pluck('data');
+        $cursor = 0; // set Cursor to 0, not to bulk size
+        $index = $this->extConf['elasticIndexName'];
+        $mappingParams = BibElasticMapping::getMappingParams($index);
 
-        $cursor = $bulkSize;
-        while ($cursor < $total) {
-            $this->io->progressAdvance($bulkSize);
-            $response = $this->bibApi->
-                group($this->extConf['zoteroGroupId'])->
-                items()->
-                top()->
-                start($cursor)->
-                limit($bulkSize)->
-                send();
-            $collection = new Collection($response->getBody());
-            $this->bibliographyItems = $this->bibliographyItems->
-                concat($collection->pluck('data'));
-            $cursor += $bulkSize;
+        try {
+            // in older Elasticsearch versions (until 7) exists returns a bool
+            if ($this->client->indices()->exists(['index' => $index])) {
+                $this->client->indices()->delete(['index' => $index]);
+                $this->client->indices()->create($mappingParams);
+            }
+        } catch (\Exception $e) {
+            // other versions return a Message object
+            if ($e->getCode() === 404) {
+                $this->io->note("Index: " . $index . " does not exist. Trying to create new index.");
+                $this->client->indices()->create($mappingParams);
+            } else {
+                $this->io->error("Exception: " . $e->getMessage());
+                $this->logger->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
+                throw new \Exception('Bibliography sync unsuccessful.');
+            }
+        }
+
+        $apiCounter = self::API_TRIALS;
+
+        while ($cursor < $this->total) {
+            try {
+                $this->sync($cursor, 0);
+
+                $apiCounter = self::API_TRIALS;
+                $remainingItems = $this->total - $cursor;
+                $advanceBy = min($remainingItems, $this->bulkSize);
+                $this->io->progressAdvance($advanceBy);
+                $cursor += $this->bulkSize;
+            } catch (\Exception $e) {
+                $this->io->newline(1);
+                $this->io->caution($e->getMessage());
+                $this->io->newline(1);
+                if ($apiCounter == 0) {
+                    $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
+                    $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                    throw new \Exception('Bibliography sync unsuccessful.');
+                } else {
+                    $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
+                }
+            }
         }
         $this->io->progressFinish();
     }
 
-    protected function commitBibliography(): void
+    protected function versionedSync(int $version): void
     {
-        $index = $this->extConf['elasticIndexName'];
-        $this->io->text('Committing the ' . $index . ' index');
+        $apiCounter = self::API_TRIALS;
+        while (true) {
+            try {
+                $this->sync(0, $version);
+                $this->io->text('done');
+                return;
+            } catch (\Exception $e) {
+                $this->io->newline(1);
+                $this->io->caution($e->getMessage());
+                $this->io->newline(1);
+                if ($apiCounter == 0) {
+                    $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
+                    $this->logger->warning('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                    throw new \Exception('Bibliography sync unsuccessful.');
+                } else {
+                    $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
+                }
+            }
+        }
+    }
 
-        $this->io->progressStart(count($this->bibliographyItems));
-        if ($this->client->indices()->exists(['index' => $index])) {
-            $this->client->indices()->delete(['index' => $index]);
-            $this->client->indices()->create(['index' => $index]);
+    protected function sync(int $cursor = 0, int $version = 0): void
+    {
+        $this->fetchBibliography($cursor, $version);
+        $this->fetchCitations($cursor, $version);
+        $this->fetchTeiData($cursor, $version);
+        $this->buildDataSets();
+        $this->commitBibliography();
+    }
+
+    protected function getVersion(InputInterface $input): int
+    {
+        // if -a is specified, perfom a full update
+        if ($input->getOption('all')) {
+            return 0;
         }
 
+        // also set version to 0 for dev tests if the total results are limited
+        if ($input->getOption('total')) {
+            $this->io->text('Total results limited to: '. $input->getOption('total'));
+            return 0;
+        }
+
+
+        // if a version is manually specified, perform sync from this version
+        $argumentVersion = $input->getArgument('version');
+        if ($argumentVersion > 0) {
+            return (int) $argumentVersion;
+        }
+
+        // get most recent version from stored data
+        $params = [
+            'index' => $this->extConf['elasticIndexName'],
+            'body' => [
+                'aggs' => [
+                    'max_version' => [
+                        'max' => [
+                            'field' => 'version'
+                        ]
+                    ]
+                ],
+                'size' => 0
+            ]
+        ];
+
+        try {
+            $response = $this->client->search($params);
+            return (int) $response['aggregations']['max_version']['value'];
+        } catch (\Exception $e) {
+            if ($e->getCode() === 404) {
+                // Index not found, return 0
+                $this->io->note('No Index with name: ' . $this->extConf['elasticIndexName'] . ' found. Return 0 as Version, create new index in next steps...');
+                return 0;
+            } else {
+                $this->io->error("Exception: " . $e->getMessage());
+                throw new \Exception('Bibliography sync unsuccessful.');
+            }
+        }
+    }
+
+    protected function fetchBibliography(int $cursor, int $version): void
+    {
+        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $response = $client->
+            group($this->extConf['zoteroGroupId'])->
+            items()->
+            top()->
+            start($cursor)->
+            limit($this->bulkSize)->
+            setSince($version)->
+            send();
+
+        $this->bibliographyItems = Collection::wrap($response->getBody())->
+            pluck('data');
+    }
+
+    protected function fetchCitations(int $cursor, int $version): void
+    {
+        $this->localizedCitations = new Collection();
+        $this->locales->each(function($locale) use($cursor, $version) { $this->fetchCitationLocale($locale, $cursor, $version); });
+    }
+
+    protected function fetchCitationLocale(string $locale, int $cursor, int $version): void
+    {
+        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $style = $this->extConf['zoteroStyle'];
+        $response = $client->
+            group($this->extConf['zoteroGroupId'])->
+            items()->
+            top()->
+            start($cursor)->
+            limit($this->bulkSize)->
+            setSince($version)->
+            setInclude('citation')->
+            setStyle($style)->
+            setLinkwrap()->
+            setLocale($locale)->
+            send();
+
+        $this->localizedCitations = new Collection([ $locale =>
+                Collection::wrap($response->getBody())->
+                    keyBy('key')
+            ]);
+    }
+
+    protected function fetchTeiData(int $cursor, int $version): void
+    {
+        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $response = $client->
+            group($this->extConf['zoteroGroupId'])->
+            items()->
+            top()->
+            start($cursor)->
+            limit($this->bulkSize)->
+            setSince($version)->
+            setInclude('tei')->
+            send();
+        $collection = new Collection($response->getBody());
+
+        $this->teiDataSets = Collection::wrap($response->getBody())->
+            keyBy('key');
+    }
+
+    protected function buildDataSets(): void
+    {
+        $this->dataSets = $this->bibliographyItems->
+            map(function($bibliographyItem) {
+                return BibEntryProcessor::process($bibliographyItem, $this->localizedCitations, $this->teiDataSets);
+            });
+    }
+
+    protected function commitBibliography(): void
+    {
+        if ($this->dataSets->count() == 0) {
+            $this->io->text('no new bibliographic entries');
+            return;
+        }
+        $index = $this->extConf['elasticIndexName'];
+
         $params = [ 'body' => [] ];
+
         $bulkCount = 0;
-        foreach ($this->bibliographyItems as $document) {
-            $this->io->progressAdvance();
-            $params['body'][] = [ 'index' => 
-                [ 
+        foreach ($this->dataSets as $document) {
+            $params['body'][] = [ 'index' =>
+                [
                     '_index' => $index,
                     '_id' => $document['key']
-                ] 
+                ]
             ];
             $params['body'][] = json_encode($document);
 
@@ -129,13 +369,10 @@ class IndexCommand extends Command
                 $params = [ 'body' => [] ];
             }
         }
-        $this->io->progressFinish();
         $this->client->bulk($params);
-
-        $this->io->text('done');
     }
 
-    protected function commitLocales(): void
+/*    protected function commitLocales(): void
     {
         $localeIndex = $this->extConf['elasticLocaleIndexName'];
         $this->io->text('Committing the ' . $localeIndex . ' index');
@@ -147,11 +384,11 @@ class IndexCommand extends Command
 
         $params = [ 'body' => [] ];
         foreach ($this->locales as $key => $locale) {
-            $params['body'][] = [ 'index' => 
-                [ 
+            $params['body'][] = [ 'index' =>
+                [
                     '_index' => $localeIndex,
                     '_id' => $key
-                ] 
+                ]
             ];
             $params['body'][] = json_encode($locale);
 
@@ -159,5 +396,5 @@ class IndexCommand extends Command
         $this->client->bulk($params);
 
         $this->io->text('done');
-    }
+    }*/
 }
