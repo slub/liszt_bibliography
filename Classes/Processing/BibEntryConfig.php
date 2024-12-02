@@ -125,6 +125,37 @@ class BibEntryConfig
         'conditionRelation' => 'neq',
     ];
 
+
+    const REQUIRED_FIELDS = [
+        'key' => [
+            'type' => 'string',
+            'not_empty' => true,
+            'min_length' => 3,
+        ],
+        'title' => [
+            'not_empty' => true,
+        ],
+        'itemType' => [
+            'type' => 'string',
+            'not_empty' => true,
+        ],
+        'place' => [
+            'type' => 'string',
+            'not_empty' => true,
+        ],
+        'creators' => [
+            'type' => 'array',
+        ],
+//        'date' => [
+//            'type' => 'date:Y-m-d',
+//        ],
+    ];
+
+    public static function getRequiredFields(): array
+    {
+        return self::REQUIRED_FIELDS;
+    }
+
     public static function getAuthorHeader(): array
     {
         return [ self::AUTHOR ];

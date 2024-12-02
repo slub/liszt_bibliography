@@ -26,6 +26,9 @@ class BibEntryProcessor
         Collection $teiDataSets
     ): array
     {
+        // check for required Fields
+        self::validateFields($bibliographyItem);
+
         $key = $bibliographyItem['key'];
         $bibliographyItem['localizedCitations'] = [];
         foreach ($localizedCitations as $locale => $localizedCitation) {
@@ -54,7 +57,6 @@ class BibEntryProcessor
 
         $bibliographyItem['tx_lisztcommon_searchable'] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
         $bibliographyItem['tx_lisztcommon_boosted'] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
-
         return $bibliographyItem;
     }
 
@@ -161,7 +163,7 @@ class BibEntryProcessor
                 isset($field['reverseFirst']) &&
                 $field['reverseFirst'] == true,
                 function($compoundFields) {
-                    return $compoundFields->reverse()->join(', ');;
+                    return $compoundFields->reverse()->join(', ');
                 },
                 function($compoundFields) {
                     return $compoundFields->join(' ');
@@ -172,5 +174,57 @@ class BibEntryProcessor
             return null;
         }
         return $compoundString;
+    }
+
+    private static function validateFields(array $bibliographyItem): void
+    {
+        $fieldValidations = BibEntryConfig::getRequiredFields();
+        $warnings = []; // Array to store warnings
+
+        foreach ($fieldValidations as $field => $constraints) {
+            if (!isset($bibliographyItem[$field])) {
+                $warnings[] = "The required field '{$field}' is missing in the bibliography item.";
+                continue;
+            }
+
+            $value = $bibliographyItem[$field];
+            foreach ($constraints as $constraint => $constraintValue) {
+                switch ($constraint) {
+                    case 'type':
+                        if ($constraintValue === 'string' && !is_string($value)) {
+                            $warnings[] = "The field '{$field}' should be a string.";
+                        } elseif ($constraintValue === 'int' && !is_int($value)) {
+                            $warnings[] = "The field '{$field}' should be an integer.";
+                        } elseif ($constraintValue === 'array' && !is_array($value)) {
+                            $warnings[] = "The field '{$field}' should be an array.";
+                        } elseif (strpos($constraintValue, 'date:') === 0) {
+                            $format = substr($constraintValue, 5);
+                            $d = \DateTime::createFromFormat($format, $value);
+                            if (!$d || $d->format($format) !== $value) {
+                                $warnings[] = "The field '{$field}' should be a date in the format '{$format}'.";
+                            }
+                        }
+                        break;
+                    case 'not_empty':
+                        if ($constraintValue && empty($value)) {
+                            $warnings[] = "The field '{$field}' must not be empty.";
+                        }
+                        break;
+                    case 'min_length':
+                        if (strlen($value) < $constraintValue) {
+                            $warnings[] = "The field '{$field}' should be at least {$constraintValue} characters long.";
+                        }
+                        break;
+                }
+            }
+        }
+
+        // Output all collected warnings, if any
+        if (!empty($warnings)) {
+            echo 'Warning for bibliography item: '. $bibliographyItem['key'] . "\n";
+            foreach ($warnings as $warning) {
+                echo $warning . "\n";
+            }
+        }
     }
 }
