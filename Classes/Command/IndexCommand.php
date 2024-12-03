@@ -19,6 +19,7 @@ use Slub\LisztCommon\Common\Collection;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slub\LisztCommon\Common\ElasticClientBuilder;
+use Slub\LisztBibliography\Exception\TooManyRequestsException;
 use Slub\LisztBibliography\Processing\BibEntryProcessor;
 use Slub\LisztBibliography\Processing\BibElasticMapping;
 use Symfony\Component\Console\Command\Command;
@@ -41,6 +42,8 @@ class IndexCommand extends Command
     const API_TRIALS = 3;
 
     protected string $apiKey;
+    protected string $groupId;
+
     protected Collection $bibliographyItems;
     protected Collection $deletedItems;
     protected Collection $teiDataSets;
@@ -103,6 +106,16 @@ class IndexCommand extends Command
         $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
         $this->client = ElasticClientBuilder::getClient();
         $this->apiKey = $this->extConf['zoteroApiKey'];
+        if ($this->apiKey == '') {
+            $this->logger->info('Please set an API key in the extension configuration.');
+            throw new \Exception('Please set an API key in the extension configuration.');
+        }
+        $this->groupId = $this->extConf['zoteroGroupId'];
+        if ($this->groupId == '') {
+            $this->logger->info('Please set a group ID in the extension configuration.');
+            throw new \Exception('Please set a group ID in the extension configuration.');
+        }
+
         $this->io = new SymfonyStyle($input, $output);
         $this->io->title($this->getDescription());
     }
@@ -125,9 +138,9 @@ class IndexCommand extends Command
 
     protected function fullSync(InputInterface $input): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->extConf['zoteroApiKey']);
         $response = $client->
-            group($this->extConf['zoteroGroupId'])->
+            group($this->groupId)->
             items()->
             top()->
             limit(1)->
@@ -160,7 +173,7 @@ class IndexCommand extends Command
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
                 $this->logger->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
-                throw new \Exception('Bibliography sync unsuccessful.');
+                throw new \Exception('Bibliography sync unsuccessful. Error creating elasticsearch index.');
             }
         }
 
@@ -175,6 +188,10 @@ class IndexCommand extends Command
                 $advanceBy = min($remainingItems, $this->bulkSize);
                 $this->io->progressAdvance($advanceBy);
                 $cursor += $this->bulkSize;
+            } catch (TooManyRequestsException $e) {
+                $this->io->note('Received a 429 status from Zotero API. Too many requests. Please try again later.');
+                $this->logger->error('Received a 429 status from Zotero API. Too many requests. Please try again later.');
+                throw new TooManyRequestsException('Bibliography sync unsuccessful.');
             } catch (\Exception $e) {
                 $this->io->newline(1);
                 $this->io->caution($e->getMessage());
@@ -182,7 +199,7 @@ class IndexCommand extends Command
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
                     $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    throw new \Exception('Bibliography sync unsuccessful.');
+                    throw new \Exception('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
                 }
@@ -206,7 +223,7 @@ class IndexCommand extends Command
                 if ($apiCounter == 0) {
                     $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
                     $this->logger->warning('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    throw new \Exception('Bibliography sync unsuccessful.');
+                    throw new \Exception('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
                 } else {
                     $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
                 }
@@ -268,22 +285,29 @@ class IndexCommand extends Command
                 return 0;
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
-                throw new \Exception('Bibliography sync unsuccessful.');
+                throw new \Exception('Bibliography sync unsuccessful.' . $e->getMessage());
             }
         }
     }
 
     protected function fetchBibliography(int $cursor, int $version): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->extConf['zoteroApiKey']);
         $response = $client->
-            group($this->extConf['zoteroGroupId'])->
+            group($this->groupId)->
             items()->
             top()->
             start($cursor)->
             limit($this->bulkSize)->
             setSince($version)->
             send();
+
+        if (isset($response->getHeaders()['Backoff'])) {
+            $this->logger->warning('Received a Backoff header: '. $response->getHeaders()['Backoff']);
+        }
+        if ($response->getStatusCode() == 429) {
+            throw new TooManyRequestsException('Too many requests issued. Try again later.');
+        }
 
         $this->bibliographyItems = Collection::wrap($response->getBody())->
             pluck('data');
@@ -297,10 +321,10 @@ class IndexCommand extends Command
 
     protected function fetchCitationLocale(string $locale, int $cursor, int $version): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->extConf['zoteroApiKey']);
         $style = $this->extConf['zoteroStyle'];
         $response = $client->
-            group($this->extConf['zoteroGroupId'])->
+            group($this->groupId)->
             items()->
             top()->
             start($cursor)->
@@ -320,9 +344,9 @@ class IndexCommand extends Command
 
     protected function fetchTeiData(int $cursor, int $version): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->extConf['zoteroApiKey']);
         $response = $client->
-            group($this->extConf['zoteroGroupId'])->
+            group($this->groupId)->
             items()->
             top()->
             start($cursor)->
