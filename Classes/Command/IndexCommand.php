@@ -189,6 +189,7 @@ class IndexCommand extends Command
             }
         }
         $this->io->progressFinish();
+        $this->indexLocales();
     }
 
     protected function versionedSync(int $version): void
@@ -372,14 +373,27 @@ class IndexCommand extends Command
         $this->client->bulk($params);
     }
 
-/*    protected function commitLocales(): void
+    protected function indexLocales(): void
     {
         $localeIndex = $this->extConf['elasticLocaleIndexName'];
         $this->io->text('Committing the ' . $localeIndex . ' index');
 
-        if ($this->client->indices()->exists(['index' => $localeIndex])) {
-            $this->client->indices()->delete(['index' => $localeIndex]);
-            $this->client->indices()->create(['index' => $localeIndex]);
+        try {
+            // in older Elasticsearch versions (until 7) exists returns a bool
+            if ($this->client->indices()->exists(['index' => $localeIndex])) {
+                $this->client->indices()->delete(['index' => $localeIndex]);
+                $this->client->indices()->create(['index' => $localeIndex]);
+            }
+        } catch (\Exception $e) {
+            // other versions return a Message object
+            if ($e->getCode() === 404) {
+                $this->io->note("Index: " . $localeIndex . " does not exist. Trying to create new index.");
+                $this->client->indices()->create(['index' => $localeIndex]);
+            } else {
+                $this->io->error("Exception: " . $e->getMessage());
+                $this->logger->error('Bibliography sync unsuccessful. Error creating elasticsearch index.');
+                throw new \Exception('Bibliography sync unsuccessful.');
+            }
         }
 
         $params = [ 'body' => [] ];
@@ -396,5 +410,5 @@ class IndexCommand extends Command
         $this->client->bulk($params);
 
         $this->io->text('done');
-    }*/
+    }
 }
