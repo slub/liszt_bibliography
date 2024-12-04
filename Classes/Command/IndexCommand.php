@@ -60,6 +60,8 @@ class IndexCommand extends Command
         private readonly LoggerInterface $logger
     ) {
         parent::__construct();
+        $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
+        $this->indexName = $this->extConf['elasticIndexName'] . '_' . date('Ymd_His');
         $this->initLocales();
     }
 
@@ -104,8 +106,6 @@ class IndexCommand extends Command
     {
         $this->input = $input;
         $this->output = $output;
-        $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
-        $this->indexName = $this->extConf['elasticIndexName'] . '_' . date('Ymd_His');
         $this->client = ElasticClientBuilder::getClient();
         $this->zoteroApiKey = $this->extConf['zoteroApiKey'];
         $this->io = GeneralUtility::makeInstance(SymfonyStyle::class, $this->input, $this->output);
@@ -419,7 +419,7 @@ class IndexCommand extends Command
                                 ],
                                 [
                                     'remove' => [
-                                        'index' => $indexName,
+                                        'index' => $this->indexName,
                                         'alias' => $tempIndexAlias,
                                     ],
                                 ]
