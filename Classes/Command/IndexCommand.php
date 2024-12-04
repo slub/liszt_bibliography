@@ -413,6 +413,12 @@ class IndexCommand extends Command
                                         'index' => $indexName,
                                         'alias' => $this->extConf['elasticIndexName'],
                                     ],
+                                ],
+                                [
+                                    'remove' => [
+                                        'index' => $indexName,
+                                        'alias' => $tempIndexAlias,
+                                    ],
                                 ]
                             ]
                         ]
