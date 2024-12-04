@@ -39,8 +39,7 @@ class IndexCommand extends Command
 
     const API_TRIALS = 3;
 
-    protected string $apiKey;
-    protected ZoteroApi $bibApi;
+    protected string $zoteroApiKey;
     protected Collection $bibliographyItems;
     protected int $bulkSize;
     protected Client $client;
@@ -48,9 +47,11 @@ class IndexCommand extends Command
     protected Collection $deletedItems;
     protected array $extConf;
     readonly string $indexName;
+    protected InputInterface $input;
     protected SymfonyStyle $io;
     protected Collection $locales;
     protected Collection $localizedCitations;
+    protected OutputInterface $output;
     protected Collection $teiDataSets;
     protected int $total;
 
@@ -101,21 +102,23 @@ class IndexCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
+        $this->input = $input;
+        $this->output = $output;
         $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
         $this->indexName = $this->extConf['elasticIndexName'] . '_' . date('Ymd_His');
         $this->client = ElasticClientBuilder::getClient();
-        $this->apiKey = $this->extConf['zoteroApiKey'];
-        $this->io = new SymfonyStyle($input, $output);
+        $this->zoteroApiKey = $this->extConf['zoteroApiKey'];
+        $this->io = GeneralUtility::makeInstance(SymfonyStyle::class, $this->input, $this->output);
         $this->io->title($this->getDescription());
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->bulkSize = (int) $this->extConf['zoteroBulkSize'];
-        $version = $this->getVersion($input);
+        $version = $this->getVersion();
         if ($version == 0) {
             $this->io->text('Full data synchronization requested.');
-            $this->fullSync($input);
+            $this->fullSync();
             $this->logger->info('Full data synchronization successful.');
         } else {
             $this->io->text('Synchronizing all data from version ' . $version);
@@ -125,17 +128,17 @@ class IndexCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function fullSync(InputInterface $input): void
+    protected function fullSync(): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->zoteroApiKey);
         $response = $client->
             group($this->extConf['zoteroGroupId'])->
             items()->
             top()->
             limit(1)->
             send();
-        if ($input->getOption('total')) {
-            $this->total = (int) $input->getOption('total');
+        if ($this->input->getOption('total')) {
+            $this->total = (int) $this->input->getOption('total');
         } else {
             $this->total = (int) $response->getHeaders()['Total-Results'][0];
         }
@@ -233,7 +236,7 @@ class IndexCommand extends Command
         }
     }
 
-    protected function sync(int $cursor = 0, int $version = 0,): void
+    protected function sync(int $cursor = 0, int $version = 0): void
     {
         $this->fetchBibliography($cursor, $version);
         $this->fetchCitations($cursor, $version);
@@ -242,22 +245,22 @@ class IndexCommand extends Command
         $this->commitBibliography();
     }
 
-    protected function getVersion(InputInterface $input): int
+    protected function getVersion(): int
     {
         // if -a is specified, perfom a full update
-        if ($input->getOption('all')) {
+        if ($this->input->getOption('all')) {
             return 0;
         }
 
         // also set version to 0 for dev tests if the total results are limited
-        if ($input->getOption('total')) {
-            $this->io->text('Total results limited to: '. $input->getOption('total'));
+        if ($this->input->getOption('total')) {
+            $this->io->text('Total results limited to: '. $this->input->getOption('total'));
             return 0;
         }
 
 
         // if a version is manually specified, perform sync from this version
-        $argumentVersion = $input->getArgument('version');
+        $argumentVersion = $this->input->getArgument('version');
         if ($argumentVersion > 0) {
             return (int) $argumentVersion;
         }
@@ -294,7 +297,7 @@ class IndexCommand extends Command
 
     protected function fetchBibliography(int $cursor, int $version): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->zoteroApiKey);
         $response = $client->
             group($this->extConf['zoteroGroupId'])->
             items()->
@@ -310,7 +313,6 @@ class IndexCommand extends Command
 
     protected function fetchCitations(int $cursor, int $version): void
     {
-        $this->localizedCitations = new Collection();
         $this->locales->each(function($locale) use($cursor, $version) { $this->fetchCitationLocale($locale, $cursor, $version); });
     }
 
@@ -339,7 +341,7 @@ class IndexCommand extends Command
 
     protected function fetchTeiData(int $cursor, int $version): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->zoteroApiKey);
         $response = $client->
             group($this->extConf['zoteroGroupId'])->
             items()->
