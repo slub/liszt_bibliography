@@ -37,21 +37,22 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class IndexCommand extends Command
 {
 
-    protected ZoteroApi $bibApi;
     const API_TRIALS = 3;
 
     protected string $apiKey;
+    protected ZoteroApi $bibApi;
     protected Collection $bibliographyItems;
-    protected Collection $deletedItems;
-    protected Collection $teiDataSets;
-    protected Collection $dataSets;
-    protected Client $client;
-    protected array $extConf;
-    protected SymfonyStyle $io;
     protected int $bulkSize;
-    protected int $total;
+    protected Client $client;
+    protected Collection $dataSets;
+    protected Collection $deletedItems;
+    protected array $extConf;
+    readonly string $indexName;
+    protected SymfonyStyle $io;
     protected Collection $locales;
     protected Collection $localizedCitations;
+    protected Collection $teiDataSets;
+    protected int $total;
 
     public function __construct(
         private readonly SiteFinder $siteFinder,
@@ -101,6 +102,7 @@ class IndexCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
+        $this->indexName = $this->extConf['elasticIndexName'] . '_' . date('Ymd_His');
         $this->client = ElasticClientBuilder::getClient();
         $this->apiKey = $this->extConf['zoteroApiKey'];
         $this->io = new SymfonyStyle($input, $output);
@@ -145,8 +147,7 @@ class IndexCommand extends Command
         $cursor = 0; // set Cursor to 0, not to bulk size
         // we are working with alias names to swap indexes from zotero_temp to zotero after successfully indexing
         $tempIndexAlias = $this->extConf['elasticIndexName'].'_temp';
-        $indexName = $this->extConf['elasticIndexName'] . '_' . date('Ymd_His');
-        $tempIndexParams = BibElasticMapping::getMappingParams($indexName);
+        $tempIndexParams = BibElasticMapping::getMappingParams($this->indexName);
 
         // add alias name 'zotero_temp to this index
         // and add a wildcard alias to find all zotero_* indices with the alias zotero-index
@@ -155,7 +156,7 @@ class IndexCommand extends Command
                 'actions' => [
                     [
                         'add' => [
-                            'index' => $indexName,
+                            'index' => $this->indexName,
                             'alias' => $tempIndexAlias,
                         ],
                     ],
@@ -182,7 +183,7 @@ class IndexCommand extends Command
 
         while ($cursor < $this->total) {
             try {
-                $this->sync($indexName, $cursor, 0);
+                $this->sync($cursor, 0);
                 $apiCounter = self::API_TRIALS;
                 $remainingItems = $this->total - $cursor;
                 $advanceBy = min($remainingItems, $this->bulkSize);
@@ -203,9 +204,9 @@ class IndexCommand extends Command
         }
 
         // swap alias for index from zotero_temp to zotero and remove old indexes (keep the last one)
-        $this->swapIndexAliases($indexName, $tempIndexAlias);
+        $this->swapIndexAliases($tempIndexAlias);
         //delete old indexes
-        $this->deleteOldIndexes($indexName);
+        $this->deleteOldIndexes();
         $this->io->progressFinish();
     }
 
@@ -214,7 +215,7 @@ class IndexCommand extends Command
         $apiCounter = self::API_TRIALS;
         while (true) {
             try {
-                $this->sync( $this->extConf['elasticIndexName'], 0, $version);
+                $this->sync(0, $version);
                 $this->io->text('done');
                 return;
             } catch (\Exception $e) {
@@ -232,13 +233,13 @@ class IndexCommand extends Command
         }
     }
 
-    protected function sync(string $indexName, int $cursor = 0, int $version = 0,): void
+    protected function sync(int $cursor = 0, int $version = 0,): void
     {
         $this->fetchBibliography($cursor, $version);
         $this->fetchCitations($cursor, $version);
         $this->fetchTeiData($cursor, $version);
         $this->buildDataSets();
-        $this->commitBibliography($indexName);
+        $this->commitBibliography();
     }
 
     protected function getVersion(InputInterface $input): int
@@ -362,7 +363,7 @@ class IndexCommand extends Command
             });
     }
 
-    protected function commitBibliography(string $indexName): void
+    protected function commitBibliography(): void
     {
         if ($this->dataSets->count() == 0) {
             $this->io->text('no new bibliographic entries');
@@ -373,7 +374,7 @@ class IndexCommand extends Command
         foreach ($this->dataSets as $document) {
             $params['body'][] = [ 'index' =>
                 [
-                    '_index' => $indexName,
+                    '_index' => $this->indexName,
                     '_id' => $document['key']
                 ]
             ];
@@ -387,7 +388,7 @@ class IndexCommand extends Command
         $this->client->bulk($params);
     }
 
-    protected function swapIndexAliases(string $indexName, string $tempIndexAlias): void
+    protected function swapIndexAliases(string $tempIndexAlias): void
     {
         // get index with alias = zotero
         try {
@@ -395,7 +396,7 @@ class IndexCommand extends Command
             $aliasesArray = $aliasesRequest->asArray();
 
             foreach ($aliasesArray as $index => $aliasArray) {
-                $this->io->note('Remove alias "' .$this->extConf['elasticIndexName']. '" from index '. $index . 'and add it to ' . $indexName );
+                $this->io->note('Remove alias "' .$this->extConf['elasticIndexName']. '" from index '. $index . ' and add it to ' . $this->indexName );
                 // get index name with alias 'zotero'
                 if (array_key_exists($this->extConf['elasticIndexName'], $aliasArray['aliases'])) {
                     //swap alias from old to new index
@@ -410,7 +411,7 @@ class IndexCommand extends Command
                                 ],
                                 [
                                     'add' => [
-                                        'index' => $indexName,
+                                        'index' => $this->indexName,
                                         'alias' => $this->extConf['elasticIndexName'],
                                     ],
                                 ],
@@ -430,20 +431,20 @@ class IndexCommand extends Command
         catch (\Exception $e) {
             // other versions return a Message object
             if ($e->getCode() === 404) {
-                $this->io->note("Alias: " . $this->extConf['elasticIndexName'] . " does not exist. Move alias to ".$indexName);
+                $this->io->note("Alias: " . $this->extConf['elasticIndexName'] . " does not exist. Move alias to ".$this->indexName);
                 // rename alias name from temp index to zotero
                 $aliasParams = [
                     'body' => [
                         'actions' => [
                             [
                                 'remove' => [
-                                    'index' => $indexName,
+                                    'index' => $this->indexName,
                                     'alias' => $tempIndexAlias,
                                 ],
                             ],
                             [
                                 'add' => [
-                                    'index' => $indexName,
+                                    'index' => $this->indexName,
                                     'alias' => $this->extConf['elasticIndexName'],
                                 ],
                             ]
@@ -460,7 +461,7 @@ class IndexCommand extends Command
         }
     }
 
-    protected function deleteOldIndexes($indexName): void
+    protected function deleteOldIndexes(): void
     {
         try {
             $aliasesRequest = $this->client->indices()->getAlias(['name' => $this->extConf['elasticIndexName'].'-index']);
@@ -470,7 +471,7 @@ class IndexCommand extends Command
             ksort($aliasesArray);
 
             // remove current key $indexName from array
-            unset($aliasesArray[$indexName]);
+            unset($aliasesArray[$this->indexName]);
 
             // remove the last key (we keep the last two indexes)
             array_pop($aliasesArray);
