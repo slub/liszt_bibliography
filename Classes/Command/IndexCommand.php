@@ -457,7 +457,7 @@ class IndexCommand extends Command
     protected function deleteOldIndexes($indexName): void
     {
         try {
-            $aliasesRequest = $this->client->indices()->getAlias(['name' => $this->extConf['elasticIndexName'].'_*']);
+            $aliasesRequest = $this->client->indices()->getAlias(['name' => $this->extConf['elasticIndexName'].'-index']);
             $aliasesArray = $aliasesRequest->asArray();
 
             // sort $aliasesArray by key name
@@ -478,10 +478,10 @@ class IndexCommand extends Command
         catch (\Exception $e) {
             // other versions return a Message object
             if ($e->getCode() === 404) {
-                $this->io->note("Nothing to remove, there are no indexes with alias " . $this->extConf['elasticIndexName'].'_*');
+                $this->io->note("Nothing to remove, there are no indexes with alias " . $this->extConf['elasticIndexName'].'-index');
             } else {
                 $this->io->error("Exception: " . $e->getMessage());
-                $this->logger->error('Bibliography sync unsuccessful. Error getting alias: ' . $this->extConf['elasticIndexName'].'_*');
+                $this->logger->error('Bibliography sync unsuccessful. Error getting alias: ' . $this->extConf['elasticIndexName'].'-index');
                 throw new \Exception('Bibliography sync unsuccessful.', 0, $e);
             }
         }
