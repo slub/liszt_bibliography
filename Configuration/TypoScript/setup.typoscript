@@ -41,28 +41,32 @@ plugin.tx_lisztcommon_searchlisting {
             type = terms
           }
           1 {
-            field = place
-            type = terms
+            field = creators
+            type = nested
+            script (
+              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
+              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
+              String type = doc['creators.creatorType.keyword'].size() > 0 ? doc['creators.creatorType.keyword'].value : '';
+              if (type == 'translator') {
+                return null;
+              }
+              if (firstName == '' && lastName == '') {
+                  return null;
+              }
+              return (firstName + ' ' + lastName).trim();
+            )
           }
           2 {
             field = date
             type = terms
           }
           3 {
-            field = publicationTitle
+            field = language
             type = terms
           }
           4 {
-            field = creators
-            type = nested
-            script (
-              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
-              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
-              if (firstName == '' && lastName == '') {
-                  return null;
-              }
-              return (firstName + ' ' + lastName).trim();
-            )
+            field = publicationTitle
+            type = terms
           }
         }
       }
