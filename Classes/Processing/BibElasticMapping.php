@@ -15,22 +15,28 @@ class BibElasticMapping
                 'mappings' => [
                     'dynamic' => false,
                     'properties' => [
+                        'itemType' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'version' => [ 'type' => 'long' ],
                         'title' => [ 'type' => 'text'],
                         'university' => [ 'type' => 'text'],
                         'bookTitle' => [ 'type' => 'text'],
                         'series' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'publicationTitle' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
+                        'language' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'place' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'date' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'archiveLocation' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
-                        'itemType' => [ 'type' => 'keyword'],
                         'journalTitle'  => [ 'type' => 'keyword'],
                         'creators' => [
                             'type' => 'nested',
                             'properties' => [
                                 'creatorType' => [
-                                    'type' => 'keyword'
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ]
+                                    ]
                                 ],
                                 'firstName' => [
                                     'type' => 'text',
