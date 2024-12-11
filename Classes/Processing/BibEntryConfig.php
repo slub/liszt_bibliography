@@ -35,6 +35,7 @@ class BibEntryConfig
             'separator' => ', '
         ]
     ];
+
     const EDITOR = [
         'compound' => [
             'fields' => [
@@ -55,6 +56,7 @@ class BibEntryConfig
             'separator' => ', '
         ]
     ];
+
     const TRANSLATOR = [
         'compound' => [
             'fields' => [
@@ -75,60 +77,143 @@ class BibEntryConfig
             'separator' => ', '
         ]
     ];
+
     const TITLE = [ 'field' => 'title' ];
+
     const PUBLICATION_TITLE = [
         'field' => 'publicationTitle',
         'conditionField' => 'publicationTitle',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+
     const BOOK_TITLE = [
         'field' => 'bookTitle',
         'conditionField' => 'bookTitle',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+
     const UNIVERSITY = [
         'field' => 'university',
         'conditionField' => 'university',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+
     const VOLUME = [
         'field' => 'volume',
         'conditionField' => 'volume',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+
     const ISSUE = [
         'field' => 'issue',
         'conditionField' => 'issue',
         'conditionValue' => '',
         'conditionRelation' => 'neq'
     ];
+
     const PLACE = [
         'field' => 'place',
         'conditionField' => 'place',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+
     const DATE = [
         'field' => 'date',
         'conditionField' => 'date',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+
     const PAGES = [
         'field' => 'pages',
         'conditionField' => 'pages',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
     ];
+
     const NUMBER_OF_VOLUMES = [
         'field' => 'numberOfVolumes',
         'conditionField' => 'numberOfVolumes',
         'conditionValue' => '',
         'conditionRelation' => 'neq',
+    ];
+
+    const SEARCHABLE_FIELDS = [
+        [
+            'compound' => [
+                'fields' => [
+                    [
+                        'field' => 'firstName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'author',
+                        'conditionRelation' => 'eq'
+                    ],
+                    [
+                        'field' => 'lastName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'author',
+                        'conditionRelation' => 'eq'
+                    ]
+                ],
+                'field' => 'creators',
+                'separator' => ' ',
+                'postfix' => ' '
+            ]
+        ],
+        [
+            'field' => 'title',
+            'postfix' => ' '
+        ],
+        [
+            'field' => 'university',
+            'postfix' => ' '
+        ],
+        [
+            'field' => 'bookTitle',
+            'postfix' => ' '
+        ],
+        [
+            'field' => 'series',
+            'postfix' => ' '
+        ],
+        [
+            'field' => 'publicationTitle',
+            'postfix' => ' '
+        ],
+        [
+            'field' => 'place',
+            'postfix' => ' '
+        ],
+        [
+            'field' => 'date',
+            'postfix' => ' '
+        ]
+    ];
+
+    const BOOSTED_FIELDS = [
+        [
+            'compound' => [
+                'fields' => [
+                    [
+                        'field' => 'lastName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'author',
+                        'conditionRelation' => 'eq'
+                    ]
+                ],
+                'field' => 'creators',
+                'separator' => ' ',
+                'reverseFirst' => true,
+                'postfix' => ' '
+            ]
+        ],
+        [ 'field' => 'title' ],
+        [ 'field' => 'date' ]
     ];
 
     public static function getAuthorHeader(): array
@@ -149,7 +234,7 @@ class BibEntryConfig
     public static function getArticleFooter(): array
     {
         return [
-            self::postfix(self::PUBLICATION_TITLE, ' '),
+            self::circumfix(self::PUBLICATION_TITLE, 'in: ', ' '),
             self::postfix(self::VOLUME, ' '),
             self::circumfix(self::DATE, '(', '), '),
             self::circumfix(self::ISSUE, 'Nr. ', ', '),
@@ -160,7 +245,7 @@ class BibEntryConfig
     public static function getBookSectionFooter(): array
     {
         return [
-            self::circumfix(self::BOOK_TITLE, 'In ', ', '),
+            self::circumfix(self::BOOK_TITLE, 'in: ', ', '),
             self::circumfix(self::EDITOR, 'hg. von ', ', '),
             self::circumfix(self::TRANSLATOR, 'übers. von ', ', '),
             self::postfix(self::NUMBER_OF_VOLUMES, 'Bde., '),
@@ -236,76 +321,4 @@ class BibEntryConfig
     {
         return self::comma(self::surround($field));
     }
-
-    const SEARCHABLE_FIELDS = [
-        [
-            'compound' => [
-                'fields' => [
-                    [
-                        'field' => 'firstName',
-                        'conditionField' => 'creatorType',
-                        'conditionValue' => 'author',
-                        'conditionRelation' => 'eq'
-                    ],
-                    [
-                        'field' => 'lastName',
-                        'conditionField' => 'creatorType',
-                        'conditionValue' => 'author',
-                        'conditionRelation' => 'eq'
-                    ]
-                ],
-                'field' => 'creators',
-                'separator' => ' ',
-                'postfix' => ' '
-            ]
-        ],
-        [
-            'field' => 'title',
-            'postfix' => ' '
-        ],
-        [
-            'field' => 'university',
-            'postfix' => ' '
-        ],
-        [
-            'field' => 'bookTitle',
-            'postfix' => ' '
-        ],
-        [
-            'field' => 'series',
-            'postfix' => ' '
-        ],
-        [
-            'field' => 'publicationTitle',
-            'postfix' => ' '
-        ],
-        [
-            'field' => 'place',
-            'postfix' => ' '
-        ],
-        [
-            'field' => 'date',
-            'postfix' => ' '
-        ]
-    ];
-    const BOOSTED_FIELDS = [
-        [
-            'compound' => [
-                'fields' => [
-                    [
-                        'field' => 'lastName',
-                        'conditionField' => 'creatorType',
-                        'conditionValue' => 'author',
-                        'conditionRelation' => 'eq'
-                    ]
-                ],
-                'field' => 'creators',
-                'separator' => ' ',
-                'reverseFirst' => true,
-                'postfix' => ' '
-            ]
-        ],
-        [ 'field' => 'title' ],
-        [ 'field' => 'date' ]
-    ];
 }

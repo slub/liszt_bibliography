@@ -38,31 +38,35 @@ plugin.tx_lisztcommon_searchlisting {
         filters {
           0 {
             field = itemType
-            type = terms
+            type = keyword
           }
           1 {
-            field = place
-            type = terms
+            field = creators
+            type = nested
+            script (
+              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
+              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
+              String type = doc['creators.creatorType'].size() > 0 ? doc['creators.creatorType'].value : '';
+              if (type == 'translator') {
+                return null;
+              }
+              if (firstName == '' && lastName == '') {
+                  return null;
+              }
+              return (firstName + ' ' + lastName).trim();
+            )
           }
           2 {
             field = date
             type = terms
           }
           3 {
-            field = publicationTitle
-            type = terms
+            field = language
+            type = keyword
           }
           4 {
-            field = creators
-            type = nested
-            script (
-              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
-              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
-              if (firstName == '' && lastName == '') {
-                  return null;
-              }
-              return (firstName + ' ' + lastName).trim();
-            )
+            field = publicationTitle
+            type = terms
           }
         }
       }

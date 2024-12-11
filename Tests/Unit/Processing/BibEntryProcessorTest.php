@@ -249,7 +249,7 @@ final class BibEntryProcessorTest extends UnitTestCase
     {
         $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
         $expected = Str::of(
-            'In ' . $this->bookTitle . ', ' .
+            'in: ' . $this->bookTitle . ', ' .
             'hg. von ' . $this->editorFirstName . ' ' . $this->editorLastName . ', ' .
             'übers. von ' . $this->translatorFirstName . ' ' . $this->translatorLastName . ', ' .
             $this->numberOfVolumes . 'Bde., ' .
@@ -269,7 +269,7 @@ final class BibEntryProcessorTest extends UnitTestCase
     {
         $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
         $expected = Str::of(
-            $this->bookTitle . ' ' .
+            'in: ' . $this->bookTitle . ' ' .
             $this->volume .
             ' (' . $this->date . '), Nr. ' .
             $this->issue . ', ' .
