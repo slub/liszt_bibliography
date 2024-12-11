@@ -38,7 +38,7 @@ plugin.tx_lisztcommon_searchlisting {
         filters {
           0 {
             field = itemType
-            type = terms
+            type = keyword
           }
           1 {
             field = creators
@@ -46,7 +46,7 @@ plugin.tx_lisztcommon_searchlisting {
             script (
               String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
               String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
-              String type = doc['creators.creatorType.keyword'].size() > 0 ? doc['creators.creatorType.keyword'].value : '';
+              String type = doc['creators.creatorType'].size() > 0 ? doc['creators.creatorType'].value : '';
               if (type == 'translator') {
                 return null;
               }
@@ -62,7 +62,7 @@ plugin.tx_lisztcommon_searchlisting {
           }
           3 {
             field = language
-            type = terms
+            type = keyword
           }
           4 {
             field = publicationTitle
