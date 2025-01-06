@@ -41,20 +41,9 @@ plugin.tx_lisztcommon_searchlisting {
             type = keyword
           }
           1 {
-            field = creators
+            field = tx_lisztcommon_creators
             type = nested
-            script (
-              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
-              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
-              String type = doc['creators.creatorType'].size() > 0 ? doc['creators.creatorType'].value : '';
-              if (type == 'translator') {
-                return null;
-              }
-              if (firstName == '' && lastName == '') {
-                  return null;
-              }
-              return (firstName + ' ' + lastName).trim();
-            )
+            key = fullName
           }
           2 {
             field = date

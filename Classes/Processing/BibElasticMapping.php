@@ -53,15 +53,22 @@ class BibElasticMapping
                             ]
                         ],
                         'fulltext' => [ 'type' => 'text' ],
-                        BibEntryProcessor::HEADER_FIELD => [ 'type' => 'text' ],
-                        BibEntryProcessor::BODY_FIELD => [ 'type' => 'text' ],
-                        BibEntryProcessor::FOOTER_FIELD => [ 'type' => 'text' ],
-                        BibEntryProcessor::SEARCHABLE_FIELD => ['type' => 'text', 'copy_to' => 'fulltext'],
-                        BibEntryProcessor::BOOSTED_FIELD => ['type' => 'text'],
-                        BibEntryProcessor::CREATORS_FIELD => [
+                        'tx_lisztcommon_header' => [ 'type' => 'text' ],
+                        'tx_lisztcommon_body' => [ 'type' => 'text' ],
+                        'tx_lisztcommon_footer' => [ 'type' => 'text' ],
+                        'tx_lisztcommon_searchable' => ['type' => 'text', 'copy_to' => 'fulltext'],
+                        'tx_lisztcommon_boosted' => ['type' => 'text'],
+                        'tx_lisztcommon_creators' => [
                             'type' => 'nested',
                             'properties' => [
-                                'fullName' => ['type' => 'text'],
+                                'fullName' => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ],
+                                    ],
+                                ],
                             ]
                         ],
                     ]
