@@ -148,7 +148,6 @@ class BibEntryProcessor extends IndexProcessor
                 // filter out non fitting fields
                 filter()->
                 toArray();
-            $bodyString = Str::of($compoundString);
         }
 
         // return empty string if conditions are not met
