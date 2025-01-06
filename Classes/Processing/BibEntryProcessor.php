@@ -20,6 +20,7 @@ use Slub\LisztCommon\Processing\IndexProcessor;
 
 class BibEntryProcessor extends IndexProcessor
 {
+    const CREATORS_FIELD = 'tx_lisztbibliography_creators';
 
     public static function process(
         array $bibliographyItem,
@@ -56,21 +57,27 @@ class BibEntryProcessor extends IndexProcessor
         $bibliographyItem[self::SEARCHABLE_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
         $bibliographyItem[self::BOOSTED_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
 
+        $bibliographyItem[self::CREATORS_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::CREATORS_FIELD);
+
         return $bibliographyItem;
     }
 
     public static function buildListingField(
         array $bibliographyItem,
         array $fieldConfig
-    ): Stringable
+    ): Stringable|array
     {
-        return Collection::wrap($fieldConfig)->
-            map( function($field) use ($bibliographyItem) { return self::buildListingEntry($field, $bibliographyItem); })->
+        $collectedFields = Collection::wrap($fieldConfig)->
+            map( function($field) use ($bibliographyItem) { return self::buildListingEntry($field, $bibliographyItem); });
+        if (is_array($collectedFields->get(0))) {
+            return $collectedFields->get(0);
+        }
+        return $collectedFields->
             join('')->
             trim();
     }
 
-    private static function buildListingEntry(array $field, array $bibliographyItem): ?Stringable
+    private static function buildListingEntry(array $field, array $bibliographyItem): Stringable|array|null
     {
         // return empty string if field does not exist
         if (
@@ -81,6 +88,21 @@ class BibEntryProcessor extends IndexProcessor
         ) {
             return null;
         }
+
+        // return an array when compoundArray option is set
+        if (isset($field['compoundArray'])) {
+            // build compound fields
+            return Collection::wrap($bibliographyItem[$field['compoundArray']['field']])->
+                // get selected strings
+                map(function ($bibliographyCell) use ($field) {
+                    return self::processCompound($field['compoundArray'], $bibliographyCell);
+                })->
+                // filter out non fitting fields
+                filter()->
+                toArray();
+            $bodyString = Str::of($compoundString);
+        }
+
         // return empty string if conditions are not met
         if (
             isset($field['conditionField']) &&
