@@ -57,7 +57,7 @@ class BibEntryProcessor extends IndexProcessor
         $bibliographyItem[self::SEARCHABLE_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
         $bibliographyItem[self::BOOSTED_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
 
-        $bibliographyItem[self::CREATORS_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::CREATORS_FIELD);
+        $bibliographyItem[self::CREATORS_FIELD] = self::buildNestedField($bibliographyItem, BibEntryConfig::CREATORS_FIELD);
 
         return $bibliographyItem;
     }
@@ -70,11 +70,59 @@ class BibEntryProcessor extends IndexProcessor
         $collectedFields = Collection::wrap($fieldConfig)->
             map( function($field) use ($bibliographyItem) { return self::buildListingEntry($field, $bibliographyItem); });
         if (is_array($collectedFields->get(0))) {
+            print_r($collectedFields->get(0));
             return $collectedFields->get(0);
         }
         return $collectedFields->
             join('')->
             trim();
+    }
+
+/*
+ * @Matthias: this is a new function for nested fields with an array of object,
+ * ToDo: optimize and remove hard coded 'fullname' for tx_lisztbibliography_creators
+ * maybe ist much easier with an own BibEntryConfig
+*/
+    public static function buildNestedField(
+        array $bibliographyItem,
+        array $fieldConfig
+    ): Stringable|array
+    {
+        $collectedFields = Collection::wrap($fieldConfig)
+            ->map(function ($field) use ($bibliographyItem) {
+                return self::buildListingEntry($field, $bibliographyItem);
+            });
+
+        $result = $collectedFields->flatMap(function ($item) {
+            if (is_array($item)) {
+                return array_map(function ($i) {
+                    // convert stringable to string if needed
+                    if ($i instanceof Illuminate\Support\Stringable) {
+                        $i = (string)$i;
+                    }
+                    return ['fullName' => $i];
+                }, $item);
+            }
+
+            // return fullName keys, ToDo: hardcoded key here
+            if ($item instanceof Illuminate\Support\Stringable) {
+                return [['fullName' => (string)$item]];
+            }
+
+            throw new \UnexpectedValueException('Unexpected type: ' . gettype($item));
+        })->toArray();
+
+        return $result;
+        /*Array
+        returns:
+        (
+            [0] => Array
+            ([fullName] => Illuminate\Support\Stringable Object ([value:protected] => Michael Saffle))
+
+            [1] => Array
+            ([fullName] => Illuminate\Support\Stringable Object([value:protected] => Michael Saffle)
+        )
+        */
     }
 
     private static function buildListingEntry(array $field, array $bibliographyItem): Stringable|array|null

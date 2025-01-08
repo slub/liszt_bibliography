@@ -41,7 +41,7 @@ plugin.tx_lisztcommon_searchlisting {
             type = keyword
           }
           1 {
-            field = tx_lisztcommon_creators
+            field = tx_lisztbibliography_creators
             type = nested
             key = fullName
           }
