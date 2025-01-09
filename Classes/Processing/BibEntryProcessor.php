@@ -21,6 +21,7 @@ use Slub\LisztCommon\Processing\IndexProcessor;
 class BibEntryProcessor extends IndexProcessor
 {
     const CREATORS_FIELD = 'tx_lisztbibliography_creators';
+    const FULLNAME_KEY = 'fullName';
 
     public static function process(
         array $bibliographyItem,
@@ -65,7 +66,7 @@ class BibEntryProcessor extends IndexProcessor
     public static function buildListingField(
         array $bibliographyItem,
         array $fieldConfig
-    ): Stringable|array
+    ): Stringable
     {
         $collectedFields = Collection::wrap($fieldConfig)->
             map( function($field) use ($bibliographyItem) { return self::buildListingEntry($field, $bibliographyItem); });
@@ -86,33 +87,34 @@ class BibEntryProcessor extends IndexProcessor
     public static function buildNestedField(
         array $bibliographyItem,
         array $fieldConfig
-    ): Stringable|array
+    ): array
     {
-        $collectedFields = Collection::wrap($fieldConfig)
-            ->map(function ($field) use ($bibliographyItem) {
+        return Collection::wrap($fieldConfig)->
+            map(function ($field) use ($bibliographyItem) {
                 return self::buildListingEntry($field, $bibliographyItem);
-            });
+            })->
+            flatMap(function (array $item): Collection {
+                //if (is_array($item)) { -> @Thomas do we need this?
+                return Collection::wrap($item)->map( function ($i) {
+                    // convert stringable to string if needed -> @Thomas strings are autoconverted for me?
+                    //if ($i instanceof Illuminate\Support\Stringable) {
+                        //$i = (string)$i;
+                    //}
+                    return [self::FULLNAME_KEY => $i];
+                    });
+                //}
 
-        $result = $collectedFields->flatMap(function ($item) {
-            if (is_array($item)) {
-                return array_map(function ($i) {
-                    // convert stringable to string if needed
-                    if ($i instanceof Illuminate\Support\Stringable) {
-                        $i = (string)$i;
-                    }
-                    return ['fullName' => $i];
-                }, $item);
-            }
+                // return fullName keys, ToDo: hardcoded key here -> @Thomas do we need this? Can a stringable be supplied here?
+                if ($item instanceof Illuminate\Support\Stringable) {
+                    return [[self::FULLNAME_KEY => (string)$item]];
+                }
+                // @Thomas if we don't need the type checks, we can just return [self::FULLNAME_KEY => self::buildListingEntry($field, $bibliographyItem)] in the very first mapping function
+                // For me, indexing works without those type checks
 
-            // return fullName keys, ToDo: hardcoded key here
-            if ($item instanceof Illuminate\Support\Stringable) {
-                return [['fullName' => (string)$item]];
-            }
+                throw new \UnexpectedValueException('Unexpected type: ' . gettype($item));
+            })->toArray();
 
-            throw new \UnexpectedValueException('Unexpected type: ' . gettype($item));
-        })->toArray();
-
-        return $result;
+        //return $result;
         /*Array
         returns:
         (

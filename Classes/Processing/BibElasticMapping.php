@@ -49,7 +49,7 @@ class BibElasticMapping
                                         ]
                                     ],
                                 ],
-                                'fullName' => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
+                                BibEntryProcessor::FULLNAME_KEY => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
                             ]
                         ],
                         'fulltext' => [ 'type' => 'text' ],
@@ -61,7 +61,7 @@ class BibElasticMapping
                         BibEntryProcessor::CREATORS_FIELD => [
                             'type' => 'nested',
                             'properties' => [
-                                'fullName' => [
+                                BibEntryProcessor::FULLNAME_KEY => [
                                     'type' => 'text',
                                     'fields' => [
                                         'keyword' => [
