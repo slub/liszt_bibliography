@@ -34,34 +34,34 @@ plugin.tx_lisztcommon_searchlisting {
         extensionName = liszt_bibliography
         # the name of the entity index
         indexName = zotero
-        # the facetts are multi selectable if  multiselect = yes
+        # the facets are multi selectable if multiselect is set
         # the filter fields
         filters {
           0 {
             field = itemType
             type = keyword
-            multiselect = yes
+            multiselect= 1
           }
           1 {
             field = tx_lisztbibliography_creators
             type = nested
             key = fullName
-            multiselect = yes
+            multiselect= 1
           }
           2 {
             field = date
             type = terms
-            multiselect = yes
+            multiselect = 1
           }
           3 {
             field = language
             type = keyword
-            multiselect = yes
+            multiselect = 1
           }
           4 {
             field = publicationTitle
             type = terms
-            multiselect = yes
+            multiselect = 1
           }
         }
       }
