@@ -34,6 +34,8 @@ plugin.tx_lisztcommon_searchlisting {
         extensionName = liszt_bibliography
         # the name of the entity index
         indexName = zotero
+        # the filename of the language file for translations in /Resources/Private/Language/ of the extension
+        languageFile = bibliographylang
         # the facets are multi selectable if multiselect is set
         # the filter fields
         filters {

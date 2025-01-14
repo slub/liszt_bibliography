@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+    <file source-language="en" datatype="plaintext" original="EXT:liszt_bibliography/Resources/Private/Language/bibliographylang.xlf" date="2025-01-14T13:20:31Z" product-name="liszt_bibliography">
+        <header/>
+        <body>
+            <trans-unit id="itemType" >
+                <source>Typ</source>
+            </trans-unit>
+			<trans-unit id="tx_lisztbibliography_creators" >
+				<source>Beteiligte</source>
+			</trans-unit>
+			<trans-unit id="date" >
+				<source>Datum</source>
+			</trans-unit>
+			<trans-unit id="language" >
+				<source>Sprache</source>
+			</trans-unit>
+			<trans-unit id="publicationTitle" >
+				<source>Journaltitel</source>
+			</trans-unit>
+			<trans-unit id="itemType_book" >
+				<source>Buch</source>
+			</trans-unit>
+			<trans-unit id="itemType_journalArticle" >
+				<source>Journal</source>
+			</trans-unit>
+			<trans-unit id="itemType_bookSection" >
+				<source>Buchbereich</source>
+			</trans-unit>
+			<trans-unit id="itemType_thesis" >
+				<source>Abschlussarbeit</source>
+			</trans-unit>
+        </body>
+    </file>
+</xliff>
