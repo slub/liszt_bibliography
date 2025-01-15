@@ -81,7 +81,6 @@ class BibEntryProcessor extends IndexProcessor
 
 /*
  * @Matthias: this is a new function for nested fields with an array of object,
- * ToDo: optimize and remove hard coded 'fullname' for tx_lisztbibliography_creators
  * maybe ist much easier with an own BibEntryConfig
 */
     public static function buildNestedField(
@@ -104,32 +103,15 @@ class BibEntryProcessor extends IndexProcessor
                     'Expected array from buildListingEntry, but got: ' . gettype($entry)
                 );
             }
-
             return $entry;
             })->
             flatMap(function (array $item): Collection {
-                //if (is_array($item)) { -> @Thomas do we need this?
                 return Collection::wrap($item)->map( function ($i) {
-                    // convert stringable to string if needed -> @Thomas strings are autoconverted for me?
-                    //if ($i instanceof Illuminate\Support\Stringable) {
-                        //$i = (string)$i;
-                    //}
                     return [self::FULLNAME_KEY => $i];
                     });
-                //}
-
-                // return fullName keys, ToDo: hardcoded key here -> @Thomas do we need this? Can a stringable be supplied here?
-                if ($item instanceof Illuminate\Support\Stringable) {
-                    return [[self::FULLNAME_KEY => (string)$item]];
-                }
-                // @Thomas if we don't need the type checks, we can just return [self::FULLNAME_KEY => self::buildListingEntry($field, $bibliographyItem)] in the very first mapping function
-                // For me, indexing works without those type checks
-
-                throw new \UnexpectedValueException('Unexpected type: ' . gettype($item));
             })->toArray();
 
-        //return $result;
-        /*Array
+        /*
         returns:
         (
             [0] => Array
