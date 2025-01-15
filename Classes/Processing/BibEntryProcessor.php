@@ -91,7 +91,21 @@ class BibEntryProcessor extends IndexProcessor
     {
         return Collection::wrap($fieldConfig)->
             map(function ($field) use ($bibliographyItem) {
-                return self::buildListingEntry($field, $bibliographyItem);
+            $entry = self::buildListingEntry($field, $bibliographyItem);
+
+            // buildListingEntry can return null if no field creators exist
+            if ($entry === null) {
+                // ignore or return empty array ?
+                return []; //
+            }
+
+            if (!is_array($entry)) {
+                throw new \UnexpectedValueException(
+                    'Expected array from buildListingEntry, but got: ' . gettype($entry)
+                );
+            }
+
+            return $entry;
             })->
             flatMap(function (array $item): Collection {
                 //if (is_array($item)) { -> @Thomas do we need this?
@@ -134,7 +148,9 @@ class BibEntryProcessor extends IndexProcessor
             isset($field['field']) &&
             !isset($bibliographyItem[$field['field']]) ||
             isset($field['compound']['field']) &&
-            !isset($bibliographyItem[$field['compound']['field']])
+            !isset($bibliographyItem[$field['compound']['field']]) ||
+            isset($field['compoundArray']['field']) &&
+            !isset($bibliographyItem[$field['compoundArray']['field']])
         ) {
             return null;
         }
