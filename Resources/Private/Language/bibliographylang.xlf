@@ -22,13 +22,22 @@
 				<source>Buch</source>
 			</trans-unit>
 			<trans-unit id="itemType_journalArticle" >
-				<source>Journal</source>
+				<source>Zeitschriftenartikel</source>
 			</trans-unit>
 			<trans-unit id="itemType_bookSection" >
-				<source>Buchbereich</source>
+				<source>Buchkapitel</source>
 			</trans-unit>
 			<trans-unit id="itemType_thesis" >
-				<source>Abschlussarbeit</source>
+				<source>Dissertation</source>
+			</trans-unit>
+			<trans-unit id="itemType_attachment" >
+				<source>Anhang</source>
+			</trans-unit>
+			<trans-unit id="itemType_webpage" >
+				<source>Webseite</source>
+			</trans-unit>
+			<trans-unit id="itemType_encyclopediaArticle" >
+				<source>Enzyklopädieartikel</source>
 			</trans-unit>
         </body>
     </file>
