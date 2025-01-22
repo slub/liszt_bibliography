@@ -37,7 +37,9 @@ plugin.tx_lisztcommon_searchlisting {
         # the filename of the language file for translations in /Resources/Private/Language/ of the extension
         languageFile = bibliographylang
         # the facets are multi selectable if multiselect is set
-        # size is the number of facet items, default = 10
+        # size is the number of facet items shown, default = defaultFilterSize = 10
+        defaultFilterSize = 10
+        # maxSize is the number of items loaded and hidden for "display more" button
         # the filter fields
         filters {
           0 {
@@ -50,23 +52,27 @@ plugin.tx_lisztcommon_searchlisting {
             type = nested
             key = fullName
             multiselect= 1
-            size = 15
+            maxSize = 80
           }
           2 {
             field = date
             type = terms
             multiselect = 1
-            size = 15
+            maxSize =100
+            size = 10
           }
           3 {
             field = language
             type = keyword
             multiselect = 1
+            size = 5
           }
           4 {
             field = publicationTitle
             type = terms
             multiselect = 1
+            size = 5
+            maxSize = 80
           }
         }
       }
