@@ -239,8 +239,8 @@ class IndexCommand extends Command
     protected function sync(int $cursor = 0, int $version = 0): void
     {
         $this->fetchBibliography($cursor, $version);
-        $this->fetchCitations($cursor, $version);
-        $this->fetchTeiData($cursor, $version);
+      //  $this->fetchCitations($cursor, $version);
+      //  $this->fetchTeiData($cursor, $version);
         $this->buildDataSets();
         $this->commitBibliography();
     }
@@ -361,7 +361,13 @@ class IndexCommand extends Command
     {
         $this->dataSets = $this->bibliographyItems->
             map(function($bibliographyItem) {
-                return BibEntryProcessor::process($bibliographyItem, $this->localizedCitations, $this->teiDataSets);
+                return BibEntryProcessor::process(
+                    $bibliographyItem,
+                 new Collection(),
+                 new Collection()
+                 //   $this->localizedCitations,
+                 //   $this->teiDataSets
+                );
             });
     }
 

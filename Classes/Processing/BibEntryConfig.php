@@ -216,6 +216,29 @@ class BibEntryConfig
         [ 'field' => 'date' ]
     ];
 
+    const CREATORS_FIELD = [
+        [
+            'compoundArray' => [
+                'fields' => [
+                    [
+                        'field' => 'firstName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'translator',
+                        'conditionRelation' => 'neq'
+                    ],
+                    [
+                        'field' => 'lastName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'translator',
+                        'conditionRelation' => 'neq'
+                    ]
+                ],
+                'field' => 'creators',
+                'separator' => ' '
+            ]
+        ]
+    ];
+
     public static function getAuthorHeader(): array
     {
         return [ self::AUTHOR ];

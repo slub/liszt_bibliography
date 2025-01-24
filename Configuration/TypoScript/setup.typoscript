@@ -34,39 +34,45 @@ plugin.tx_lisztcommon_searchlisting {
         extensionName = liszt_bibliography
         # the name of the entity index
         indexName = zotero
+        # the filename of the language file for translations in /Resources/Private/Language/ of the extension
+        languageFile = bibliographylang
+        # the facets are multi selectable if multiselect is set
+        # size is the number of facet items shown, default = defaultFilterSize = 10
+        defaultFilterSize = 10
+        # maxSize is the number of items loaded and hidden for "display more" button
         # the filter fields
         filters {
           0 {
             field = itemType
             type = keyword
+            multiselect= 1
           }
           1 {
-            field = creators
+            field = tx_lisztbibliography_creators
             type = nested
-            script (
-              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
-              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
-              String type = doc['creators.creatorType'].size() > 0 ? doc['creators.creatorType'].value : '';
-              if (type == 'translator') {
-                return null;
-              }
-              if (firstName == '' && lastName == '') {
-                  return null;
-              }
-              return (firstName + ' ' + lastName).trim();
-            )
+            key = fullName
+            multiselect= 1
+            maxSize = 80
           }
           2 {
             field = date
             type = terms
+            multiselect = 1
+            maxSize =100
+            size = 10
           }
           3 {
             field = language
             type = keyword
+            multiselect = 1
+            size = 5
           }
           4 {
             field = publicationTitle
             type = terms
+            multiselect = 1
+            size = 5
+            maxSize = 80
           }
         }
       }
