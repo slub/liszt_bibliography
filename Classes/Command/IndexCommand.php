@@ -16,6 +16,7 @@ namespace Slub\LisztBibliography\Command;
 use Elastic\Elasticsearch\Client;
 use Hedii\ZoteroApi\ZoteroApi;
 use Slub\LisztCommon\Common\Collection;
+use Slub\LisztCommon\Common\Str;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slub\LisztCommon\Common\ElasticClientBuilder;
@@ -43,6 +44,7 @@ class IndexCommand extends Command
     protected Collection $bibliographyItems;
     protected int $bulkSize;
     protected Client $client;
+    protected Collection $collectionIds;
     protected Collection $dataSets;
     protected Collection $deletedItems;
     protected array $extConf;
@@ -116,38 +118,65 @@ class IndexCommand extends Command
     {
         $this->bulkSize = (int) $this->extConf['zoteroBulkSize'];
         $version = $this->getVersion();
+        $this->getCollectionIdsRecursively();
+
         if ($version == 0) {
             $this->io->text('Full data synchronization requested.');
             $this->fullSync();
             $this->logger->info('Full data synchronization successful.');
         } else {
             $this->io->text('Synchronizing all data from version ' . $version);
-            $this->versionedSync($version);
+            $this->collectionIds->
+                each( function($collectionId) use ($version) { $this->versionedSync($version, $collectionId); });
             $this->logger->info('Versioned data synchronization successful.');
         }
         return Command::SUCCESS;
     }
 
-    protected function fullSync(): void
+    private function getCollectionIdsRecursively(): void
     {
-        $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->zoteroApiKey);
+        $this->collectionIds = new Collection();
+        $configuredCollectionIds = Str::of($this->extConf['zoteroCollectionId'])->
+            explode(',')->
+            map(function ($id) { return trim($id); })->
+            each( function($collectionId) { $this->recordSubcollectionRecursiveley($collectionId); });
+
+        if ($this->collectionIds->count() == 0) {
+            $this->collectionIds = Collection::wrap([null]);
+        }
+    }
+
+    private function getSubcollections(string $collectionId): void
+    {
+        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
         $response = $client->
             group($this->extConf['zoteroGroupId'])->
-            items()->
-            top()->
-            limit(1)->
+            collections($collectionId)->
+            collections()->
             send();
-        if ($this->input->getOption('total')) {
-            $this->total = (int) $this->input->getOption('total');
-        } else {
-            $this->total = (int) $response->getHeaders()['Total-Results'][0];
+        Collection::wrap($response->getBody())->
+            recursive()->
+            pluck('key')->
+            each( function ($collectionId) { $this->recordSubcollectionRecursiveley($collectionId); });
+    }
+
+    private function recordSubcollectionRecursiveley(string $collectionId): void
+    {
+        if ($collectionId) {
+            $this->collectionIds->push($collectionId);
+            $this->getSubcollections($collectionId);
         }
+    }
+
+    protected function fullSync(): void
+    {
 
         // fetch bibliography items bulkwise
-        $this->io->progressStart($this->total);
+        /*
         $collection = new Collection($response->getBody());
         $this->bibliographyItems = $collection->pluck('data');
-        $cursor = 0; // set Cursor to 0, not to bulk size
+        */
+        $cursor = 0;
         // we are working with alias names to swap indexes from zotero_temp to zotero after successfully indexing
         $tempIndexAlias = $this->extConf['elasticIndexName'].'_temp';
         $tempIndexParams = BibElasticMapping::getMappingParams($this->indexName);
@@ -184,41 +213,68 @@ class IndexCommand extends Command
 
         $apiCounter = self::API_TRIALS;
 
-        while ($cursor < $this->total) {
-            try {
-                $this->sync($cursor, 0);
-                $apiCounter = self::API_TRIALS;
-                $remainingItems = $this->total - $cursor;
-                $advanceBy = min($remainingItems, $this->bulkSize);
-                $this->io->progressAdvance($advanceBy);
-                $cursor += $this->bulkSize;
-            } catch (\Exception $e) {
-                $this->io->newline(1);
-                $this->io->caution($e->getMessage());
-                $this->io->newline(1);
-                if ($apiCounter == 0) {
-                    $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
-                    $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
-                    throw new \Exception('Bibliography sync unsuccessful.');
-                } else {
-                    $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
+        $this->collectionIds->
+            each( function($collectionId) {
+                $this->io->section('Retrieving items from collection ' . $collectionId);
+                $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->zoteroApiKey);
+                $client->
+                    group($this->extConf['zoteroGroupId']);
+                if ($collectionId != null) {
+                    $client->
+                        collections($collectionId);
                 }
-            }
-        }
+                $response = $client->
+                    items()->
+                    top()->
+                    limit(1)->
+                    send();
+                if ($this->input->getOption('total')) {
+                    $total = (int) $this->input->getOption('total');
+                } else {
+                    $total = (int) $response->getHeaders()['Total-Results'][0];
+                }
+                $cursor = 0;
+                $this->io->progressStart($total);
+                while ($cursor < $total) {
+                    try {
+                        $this->sync($cursor, 0, $collectionId);
+                        $apiCounter = self::API_TRIALS;
+                        $remainingItems = $total - $cursor;
+                        $advanceBy = min($remainingItems, $this->bulkSize);
+                        $this->io->progressAdvance($advanceBy);
+                        $cursor += $this->bulkSize;
+                    } catch (\Exception $e) {
+                        $this->io->newline(1);
+                        $this->io->caution($e->getMessage());
+                        $this->io->newline(1);
+                        if ($apiCounter == 0) {
+                            $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
+                            $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+                            throw new \Exception('Bibliography sync unsuccessful.');
+                        } else {
+                            $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
+                        }
+                    }
+                }
+                $this->io->progressFinish();
+            });
 
         // swap alias for index from zotero_temp to zotero and remove old indexes (keep the last one)
         $this->swapIndexAliases($tempIndexAlias);
         //delete old indexes
         $this->deleteOldIndexes();
-        $this->io->progressFinish();
     }
 
-    protected function versionedSync(int $version): void
+    protected function versionedSync(int $version, string $collectionId): void
     {
+        if ($collectionId) {
+            $this->io->section('Retrieving items from collection ' . $collectionId);
+        }
+
         $apiCounter = self::API_TRIALS;
         while (true) {
             try {
-                $this->sync(0, $version);
+                $this->sync(0, $version, $collectionId);
                 $this->io->text('done');
                 return;
             } catch (\Exception $e) {
@@ -236,9 +292,9 @@ class IndexCommand extends Command
         }
     }
 
-    protected function sync(int $cursor = 0, int $version = 0): void
+    protected function sync(int $cursor = 0, int $version = 0, ?string $collectionId = null): void
     {
-        $this->fetchBibliography($cursor, $version);
+        $this->fetchBibliography($cursor, $version, $collectionId);
       //  $this->fetchCitations($cursor, $version);
       //  $this->fetchTeiData($cursor, $version);
         $this->buildDataSets();
@@ -295,11 +351,16 @@ class IndexCommand extends Command
         }
     }
 
-    protected function fetchBibliography(int $cursor, int $version): void
+    protected function fetchBibliography(int $cursor, int $version, ?string $collectionId): void
     {
         $client = GeneralUtility::makeInstance(ZoteroApi::class, $this->zoteroApiKey);
+        $client->
+            group($this->extConf['zoteroGroupId']);
+        if ($collectionId != null) {
+            $client->
+                collections($collectionId);
+        }
         $response = $client->
-            group($this->extConf['zoteroGroupId'])->
             items()->
             top()->
             start($cursor)->
