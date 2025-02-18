@@ -133,7 +133,7 @@ class IndexCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function getCollectionIdsRecursively()
+    private function getCollectionIdsRecursively(): void
     {
         $this->collectionIds = new Collection();
         $configuredCollectionIds = Str::of($this->extConf['zoteroCollectionId'])->
@@ -146,7 +146,7 @@ class IndexCommand extends Command
         }
     }
 
-    private function getSubcollections(string $collectionId)
+    private function getSubcollections(string $collectionId): void
     {
         $client = new ZoteroApi($this->extConf['zoteroApiKey']);
         $response = $client->
@@ -160,7 +160,7 @@ class IndexCommand extends Command
             each( function ($collectionId) { $this->recordSubcollectionRecursiveley($collectionId); });
     }
 
-    private function recordSubcollectionRecursiveley(string $collectionId)
+    private function recordSubcollectionRecursiveley(string $collectionId): void
     {
         if ($collectionId) {
             $this->collectionIds->push($collectionId);
