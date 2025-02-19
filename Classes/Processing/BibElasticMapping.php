@@ -27,12 +27,31 @@ class BibElasticMapping
                         'date' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'archiveLocation' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'journalTitle'  => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
-                        'creators' => [
+                        'authors' => [
                             'type' => 'nested',
                             'properties' => [
-                                'creatorType' => [
-                                    'type' => 'keyword'
+                                'firstName' => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ],
+                                    ],
                                 ],
+                                'lastName' => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ]
+                                    ],
+                                ],
+                                BibEntryProcessor::FULLNAME_KEY => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
+                            ]
+                        ],
+                        'editors' => [
+                            'type' => 'nested',
+                            'properties' => [
                                 'firstName' => [
                                     'type' => 'text',
                                     'fields' => [
@@ -58,7 +77,20 @@ class BibElasticMapping
                         BibEntryProcessor::FOOTER_FIELD => [ 'type' => 'text' ],
                         BibEntryProcessor::SEARCHABLE_FIELD => ['type' => 'text', 'copy_to' => 'fulltext'],
                         BibEntryProcessor::BOOSTED_FIELD => ['type' => 'text'],
-                        BibEntryProcessor::CREATORS_FIELD => [
+                        BibEntryProcessor::AUTHORS_FIELD => [
+                            'type' => 'nested',
+                            'properties' => [
+                                BibEntryProcessor::FULLNAME_KEY => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ],
+                                    ],
+                                ],
+                            ]
+                        ],
+                        BibEntryProcessor::EDITORS_FIELD => [
                             'type' => 'nested',
                             'properties' => [
                                 BibEntryProcessor::FULLNAME_KEY => [

@@ -20,7 +20,8 @@ use Slub\LisztCommon\Processing\IndexProcessor;
 
 class BibEntryProcessor extends IndexProcessor
 {
-    const CREATORS_FIELD = 'tx_lisztbibliography_creators';
+    const AUTHORS_FIELD = 'tx_lisztbibliography_authors';
+    const EDITORS_FIELD = 'tx_lisztbibliography_editors';
     const FULLNAME_KEY = 'fullName';
 
     public static function process(
@@ -58,7 +59,8 @@ class BibEntryProcessor extends IndexProcessor
         $bibliographyItem[self::SEARCHABLE_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
         $bibliographyItem[self::BOOSTED_FIELD] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
 
-        $bibliographyItem[self::CREATORS_FIELD] = self::buildNestedField($bibliographyItem, BibEntryConfig::CREATORS_FIELD);
+        $bibliographyItem[self::AUTHORS_FIELD] = self::buildNestedField($bibliographyItem, BibEntryConfig::AUTHORS_FIELD);
+        $bibliographyItem[self::EDITORS_FIELD] = self::buildNestedField($bibliographyItem, BibEntryConfig::EDITORS_FIELD);
 
         return $bibliographyItem;
     }
