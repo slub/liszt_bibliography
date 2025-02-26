@@ -29,6 +29,12 @@ class BibEntryConfig
                     'conditionField' => 'creatorType',
                     'conditionValue' => 'author',
                     'conditionRelation' => 'eq'
+                ],
+                [
+                    'field' => 'name',
+                    'conditionField' => 'creatorType',
+                    'conditionValue' => 'author',
+                    'conditionRelation' => 'eq'
                 ]
             ],
             'field' => 'creators',
@@ -50,6 +56,12 @@ class BibEntryConfig
                     'conditionField' => 'creatorType',
                     'conditionValue' => 'editor',
                     'conditionRelation' => 'eq'
+                ],
+                [
+                    'field' => 'name',
+                    'conditionField' => 'creatorType',
+                    'conditionValue' => 'editor',
+                    'conditionRelation' => 'eq'
                 ]
             ],
             'field' => 'creators',
@@ -68,6 +80,12 @@ class BibEntryConfig
                 ],
                 [
                     'field' => 'lastName',
+                    'conditionField' => 'creatorType',
+                    'conditionValue' => 'translator',
+                    'conditionRelation' => 'eq'
+                ],
+                [
+                    'field' => 'name',
                     'conditionField' => 'creatorType',
                     'conditionValue' => 'translator',
                     'conditionRelation' => 'eq'
@@ -158,6 +176,12 @@ class BibEntryConfig
                         'conditionField' => 'creatorType',
                         'conditionValue' => 'author',
                         'conditionRelation' => 'eq'
+                    ],
+                    [
+                        'field' => 'name',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'author',
+                        'conditionRelation' => 'eq'
                     ]
                 ],
                 'field' => 'creators',
@@ -216,21 +240,55 @@ class BibEntryConfig
         [ 'field' => 'date' ]
     ];
 
-    const CREATORS_FIELD = [
+    const AUTHORS_FIELD = [
         [
             'compoundArray' => [
                 'fields' => [
                     [
                         'field' => 'firstName',
                         'conditionField' => 'creatorType',
-                        'conditionValue' => 'translator',
-                        'conditionRelation' => 'neq'
+                        'conditionValue' => 'author',
+                        'conditionRelation' => 'eq'
                     ],
                     [
                         'field' => 'lastName',
                         'conditionField' => 'creatorType',
-                        'conditionValue' => 'translator',
-                        'conditionRelation' => 'neq'
+                        'conditionValue' => 'author',
+                        'conditionRelation' => 'eq'
+                    ],
+                    [
+                        'field' => 'name',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'author',
+                        'conditionRelation' => 'eq'
+                    ]
+                ],
+                'field' => 'creators',
+                'separator' => ' '
+            ]
+        ]
+    ];
+
+    const EDITORS_FIELD = [
+        [
+            'compoundArray' => [
+                'fields' => [
+                    [
+                        'field' => 'firstName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'editor',
+                        'conditionRelation' => 'eq'
+                    ],
+                    [
+                        'field' => 'lastName',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'editor', 'conditionRelation' => 'eq'
+                    ],
+                    [
+                        'field' => 'name',
+                        'conditionField' => 'creatorType',
+                        'conditionValue' => 'editor',
+                        'conditionRelation' => 'eq'
                     ]
                 ],
                 'field' => 'creators',

@@ -48,27 +48,34 @@ plugin.tx_lisztcommon_searchlisting {
             multiselect= 1
           }
           1 {
-            field = tx_lisztbibliography_creators
+            field = tx_lisztbibliography_authors
             type = nested
             key = fullName
             multiselect= 1
             maxSize = 80
           }
           2 {
+            field = tx_lisztbibliography_editors
+            type = nested
+            key = fullName
+            multiselect= 1
+            maxSize = 80
+          }
+          3 {
             field = date
             type = terms
             multiselect = 1
             maxSize =100
             size = 10
           }
-          3 {
+          4 {
             field = language
             type = keyword
             multiselect = 1
             size = 5
             maxSize = 40
           }
-          4 {
+          5 {
             field = publicationTitle
             type = terms
             multiselect = 1

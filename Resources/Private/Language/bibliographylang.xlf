@@ -9,6 +9,12 @@
 			<trans-unit id="tx_lisztbibliography_creators" >
 				<source>Beteiligte</source>
 			</trans-unit>
+			<trans-unit id="tx_lisztbibliography_authors" >
+				<source>Autor:innen</source>
+			</trans-unit>
+			<trans-unit id="tx_lisztbibliography_editors" >
+				<source>Herausgeber:innen</source>
+			</trans-unit>
 			<trans-unit id="date" >
 				<source>Datum</source>
 			</trans-unit>
