@@ -27,31 +27,12 @@ class BibElasticMapping
                         'date' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'archiveLocation' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'journalTitle'  => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
-                        'authors' => [
+                        'creators' => [
                             'type' => 'nested',
                             'properties' => [
-                                'firstName' => [
-                                    'type' => 'text',
-                                    'fields' => [
-                                        'keyword' => [
-                                            'type' => 'keyword', 'ignore_above' => 256
-                                        ],
-                                    ],
+                                'creatorType' => [
+                                    'type' => 'keyword'
                                 ],
-                                'lastName' => [
-                                    'type' => 'text',
-                                    'fields' => [
-                                        'keyword' => [
-                                            'type' => 'keyword', 'ignore_above' => 256
-                                        ]
-                                    ],
-                                ],
-                                BibEntryProcessor::FULLNAME_KEY => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
-                            ]
-                        ],
-                        'editors' => [
-                            'type' => 'nested',
-                            'properties' => [
                                 'firstName' => [
                                     'type' => 'text',
                                     'fields' => [
