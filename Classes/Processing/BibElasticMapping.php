@@ -49,7 +49,6 @@ class BibElasticMapping
                                         ]
                                     ],
                                 ],
-                                BibEntryProcessor::FULLNAME_KEY => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
                             ]
                         ],
                         'fulltext' => [ 'type' => 'text' ],
