@@ -92,6 +92,7 @@ class BibElasticMapping
                                 ],
                             ]
                         ],
+                        BibEntryProcessor::YEAR_FIELD => [ 'type' => 'short' ],
                     ]
                 ]
             ]

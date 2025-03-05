@@ -420,10 +420,12 @@ class IndexCommand extends Command
 
     protected function buildDataSets(): void
     {
+        $bibEntryProcessor = new BibEntryProcessor($this->logger);
+
         $this->dataSets = $this->bibliographyItems->
-            map(function($bibliographyItem) {
-                return BibEntryProcessor::process(
-                    $bibliographyItem,
+            map(function($bibliographyItem) use ($bibEntryProcessor) {
+                return $bibEntryProcessor->process(
+                $bibliographyItem,
                  new Collection(),
                  new Collection()
                  //   $this->localizedCitations,

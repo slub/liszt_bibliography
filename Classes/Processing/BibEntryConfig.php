@@ -297,6 +297,7 @@ class BibEntryConfig
         ]
     ];
 
+
     public static function getAuthorHeader(): array
     {
         return [ self::AUTHOR ];
@@ -356,6 +357,7 @@ class BibEntryConfig
             self::DATE
         ];
     }
+
 
     private static function prefix(array $field, string $prefix): array
     {
