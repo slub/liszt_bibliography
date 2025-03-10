@@ -39,6 +39,8 @@ plugin.tx_lisztcommon_searchlisting {
         # the facets are multi selectable if multiselect is set
         # size is the number of facet items shown, default = defaultFilterSize = 10
         defaultFilterSize = 10
+        # sort results if non fulltextsearch is processed (if not sorted by relevance)
+        defaultSortBy = tx_lisztbibliography_year
         # maxSize is the number of items loaded and hidden for "display more" button
         # the filter fields
         filters {
