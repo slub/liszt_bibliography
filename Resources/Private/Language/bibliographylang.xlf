@@ -18,6 +18,9 @@
 			<trans-unit id="date" >
 				<source>Datum</source>
 			</trans-unit>
+			<trans-unit id="tx_lisztbibliography_year" >
+				<source>Datum</source>
+			</trans-unit>
 			<trans-unit id="language" >
 				<source>Sprache</source>
 			</trans-unit>

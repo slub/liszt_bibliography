@@ -36,51 +36,52 @@ plugin.tx_lisztcommon_searchlisting {
         indexName = zotero
         # the filename of the language file for translations in /Resources/Private/Language/ of the extension
         languageFile = bibliographylang
-        # the facets are multi selectable if multiselect is set
+        # select stands for the type of selection like multipe selects in one Facette or date range
+        # select = multi, select = range
         # size is the number of facet items shown, default = defaultFilterSize = 10
         defaultFilterSize = 10
         # sort results if non fulltextsearch is processed (if not sorted by relevance)
         defaultSortBy = tx_lisztbibliography_year
+        defaultSortDirection = asc
         # maxSize is the number of items loaded and hidden for "display more" button
         # the filter fields
         filters {
           0 {
             field = itemType
             type = keyword
-            multiselect= 1
+            select = multi
           }
           1 {
             field = tx_lisztbibliography_authors
             type = nested
             key = fullName
-            multiselect= 1
+            select = multi
             maxSize = 80
           }
           2 {
             field = tx_lisztbibliography_editors
             type = nested
             key = fullName
-            multiselect= 1
+            select = multi
             maxSize = 80
           }
           3 {
-            field = date
-            type = terms
-            multiselect = 1
-            maxSize =100
-            size = 10
+            field = tx_lisztbibliography_year
+            type = short
+            select = range
+
           }
           4 {
             field = language
             type = keyword
-            multiselect = 1
+            select = multi
             size = 5
             maxSize = 40
           }
           5 {
             field = publicationTitle
             type = terms
-            multiselect = 1
+            select = multi
             size = 5
             maxSize = 80
           }
