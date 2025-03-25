@@ -3,6 +3,7 @@
 namespace Slub\LisztBibliography\Tests\Unit\Controller;
 
 use Illuminate\Support\Str;
+use Psr\Log\LoggerInterface;
 use Slub\LisztBibliography\Processing\BibEntryConfig;
 use Slub\LisztBibliography\Processing\BibEntryProcessor;
 use Slub\LisztCommon\Common\Collection;
@@ -175,7 +176,8 @@ final class BibEntryProcessorTest extends UnitTestCase
             }
             JSON;
 
-        $this->subject = GeneralUtility::makeInstance(BibEntryProcessor::class);
+        $logger = $this->createStub(LoggerInterface::class);
+        $this->subject = GeneralUtility::makeInstance(BibEntryProcessor::class, $logger);
         $this->exampleBookArray = json_decode($this->exampleBook, true);
         $this->exampleBookWithoutAuthorArray = json_decode($this->exampleBookWithoutAuthor, true);
         $this->exampleBookWithAnonymousAuthorArray = json_decode($this->exampleBookWithAnonymousAuthor, true);
