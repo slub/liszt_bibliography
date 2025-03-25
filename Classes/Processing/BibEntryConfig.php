@@ -264,7 +264,9 @@ class BibEntryConfig
                     ]
                 ],
                 'field' => 'creators',
-                'separator' => ' '
+                'separator' => ', ',
+                'reverseFirst' => true,
+
             ]
         ]
     ];
@@ -282,7 +284,8 @@ class BibEntryConfig
                     [
                         'field' => 'lastName',
                         'conditionField' => 'creatorType',
-                        'conditionValue' => 'editor', 'conditionRelation' => 'eq'
+                        'conditionValue' => 'editor',
+                        'conditionRelation' => 'eq'
                     ],
                     [
                         'field' => 'name',
@@ -292,10 +295,12 @@ class BibEntryConfig
                     ]
                 ],
                 'field' => 'creators',
-                'separator' => ' '
+                'separator' => ', ',
+                'reverseFirst' => true,
             ]
         ]
     ];
+
 
     public static function getAuthorHeader(): array
     {
@@ -356,6 +361,7 @@ class BibEntryConfig
             self::DATE
         ];
     }
+
 
     private static function prefix(array $field, string $prefix): array
     {
