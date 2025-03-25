@@ -110,9 +110,12 @@ class BibEntryProcessor extends IndexProcessor
             ]);
             return null;
         }
-        if (preg_match('/\b(\d{4})\b/', $dateString, $matches)) {
-            return (int)$matches[1];
+        // find all 4 digit matches and use the last one
+        if (preg_match_all('/\b(\d{4})\b/', $dateString, $matches) && !empty($matches[1])) {
+            $lastIndex = count($matches[1]) - 1;
+            return (int)$matches[1][$lastIndex];
         }
+
         $this->logger->info('not 4-digit YEAR field found {dateString} in id {id}', [
             'dateString' => $dateString,
             'id' => $bibliographyItem['key'] ?? ''
