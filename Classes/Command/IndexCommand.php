@@ -48,6 +48,7 @@ class IndexCommand extends Command
     protected Collection $dataSets;
     protected Collection $deletedItems;
     protected array $extConf;
+    protected array $collectionToItemTypeMap;
     readonly string $indexName;
     protected InputInterface $input;
     protected SymfonyStyle $io;
@@ -63,6 +64,9 @@ class IndexCommand extends Command
     ) {
         parent::__construct();
         $this->extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
+        //var_dump($this->extConf['collectionToItemTypeMap']);
+        //var_dump(json_decode($this->extConf['collectionToItemTypeMap'], true));
+        $this->collectionToItemTypeMap = json_decode($this->extConf['collectionToItemTypeMap'], true);
         $this->indexName = $this->extConf['elasticIndexName'] . '_' . date('Ymd_His');
         $this->initLocales();
     }
@@ -426,10 +430,11 @@ class IndexCommand extends Command
             map(function($bibliographyItem) use ($bibEntryProcessor) {
                 return $bibEntryProcessor->process(
                 $bibliographyItem,
-                 new Collection(),
-                 new Collection()
-                 //   $this->localizedCitations,
-                 //   $this->teiDataSets
+                $this->collectionToItemTypeMap,
+                new Collection(),
+                new Collection()
+                //   $this->localizedCitations,
+                //   $this->teiDataSets
                 );
             });
     }
