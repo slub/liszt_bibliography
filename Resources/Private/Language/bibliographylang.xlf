@@ -30,6 +30,9 @@
 			<trans-unit id="itemType_book" >
 				<source>Buch</source>
 			</trans-unit>
+			<trans-unit id="itemType_printedMusic" >
+				<source>Musikalie</source>
+			</trans-unit>
 			<trans-unit id="itemType_journalArticle" >
 				<source>Zeitschriftenartikel</source>
 			</trans-unit>

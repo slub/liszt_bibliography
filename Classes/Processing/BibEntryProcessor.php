@@ -35,11 +35,13 @@ class BibEntryProcessor extends IndexProcessor
     //Todo: maybe we find a better name for "process" ;-)
     public function process(
         array $bibliographyItem,
+        array $collectionToItemTypeMap,
         Collection $localizedCitations,
         Collection $teiDataSets
     ): array
     {
         $key = $bibliographyItem['key'];
+        $bibliographyItem['itemType'] = $this->calculateItemType($bibliographyItem, $collectionToItemTypeMap);
         $bibliographyItem['localizedCitations'] = [];
         foreach ($localizedCitations as $locale => $localizedCitation) {
             $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
@@ -74,6 +76,20 @@ class BibEntryProcessor extends IndexProcessor
         $bibliographyItem[self::YEAR_FIELD]    = $this->buildYearField($bibliographyItem, BibEntryConfig::DATE);
 
         return $bibliographyItem;
+    }
+
+    protected function calculateItemType(
+        array $bibliographyItem,
+        array $collectionToItemTypeMap
+    ): string {
+        foreach ($bibliographyItem['collections'] as $itemCollection) {
+            foreach ($collectionToItemTypeMap as $mapCollection => $itemType) {
+                if ($itemCollection == $mapCollection) {
+                    return $itemType;
+                }
+            }
+        }
+        return $bibliographyItem['itemType'];
     }
 
     protected function buildListingField(

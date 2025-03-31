@@ -76,7 +76,8 @@ final class BibEntryProcessorTest extends UnitTestCase
                 "place": "$this->place",
                 "volume": "$this->volume",
                 "numberOfVolumes": "$this->numberOfVolumes",
-                "date": "$this->date"
+                "date": "$this->date",
+                "collections": []
             }
             JSON;
 
@@ -101,7 +102,8 @@ final class BibEntryProcessorTest extends UnitTestCase
                 "volume": "$this->volume",
                 "numberOfVolumes": "$this->numberOfVolumes",
                 "place": "$this->place",
-                "date": "$this->date"
+                "date": "$this->date",
+                "collections": []
             }
             JSON;
 
@@ -119,7 +121,8 @@ final class BibEntryProcessorTest extends UnitTestCase
                     }
                 ],
                 "place": "$this->place",
-                "date": "$this->date"
+                "date": "$this->date",
+                "collections": []
             }
             JSON;
 
@@ -140,7 +143,8 @@ final class BibEntryProcessorTest extends UnitTestCase
                 "date": "$this->date",
                 "pages": "$this->pages",
                 "volume": "$this->volume",
-                "issue": "$this->issue"
+                "issue": "$this->issue",
+                "collections": []
             }
             JSON;
 
@@ -172,7 +176,8 @@ final class BibEntryProcessorTest extends UnitTestCase
                 "numberOfVolumes": "$this->numberOfVolumes",
                 "place": "$this->place",
                 "date": "$this->date",
-                "pages": "$this->pages"
+                "pages": "$this->pages",
+                "collections": []
             }
             JSON;
 
@@ -195,11 +200,11 @@ final class BibEntryProcessorTest extends UnitTestCase
      */
     public function headerIsProcessedCorrectly(): void
     {
-        $book = $this->subject->process($this->exampleBookArray, new Collection(), new Collection());
-        $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
-        $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
-        $bookWithoutAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, new Collection(), new Collection());
-        $bookWithAnonymousAuthor = $this->subject->process($this->exampleBookWithAnonymousAuthorArray, new Collection(), new Collection());
+        $book = $this->subject->process($this->exampleBookArray, [], new Collection(), new Collection());
+        $bookSection = $this->subject->process($this->exampleBookSectionArray, [], new Collection(), new Collection());
+        $article = $this->subject->process($this->exampleArticleArray, [], new Collection(), new Collection());
+        $bookWithoutAuthor = $this->subject->process($this->exampleBookWithoutAuthorArray, [], new Collection(), new Collection());
+        $bookWithAnonymousAuthor = $this->subject->process($this->exampleBookWithAnonymousAuthorArray, [], new Collection(), new Collection());
 
         $expected = Str::of($this->authorFirstName . ' ' . $this->authorLastName);
         $expectedWithoutAuthor = Str::of($this->editorFirstName . ' ' . $this->editorLastName . ' (Hg.)');
@@ -217,9 +222,9 @@ final class BibEntryProcessorTest extends UnitTestCase
      */
     public function bodyIsProcessedCorrectly(): void
     {
-        $book = $this->subject->process($this->exampleBookArray, new Collection(), new Collection());
-        $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
-        $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
+        $book = $this->subject->process($this->exampleBookArray, [], new Collection(), new Collection());
+        $bookSection = $this->subject->process($this->exampleBookSectionArray, [], new Collection(), new Collection());
+        $article = $this->subject->process($this->exampleArticleArray, [], new Collection(), new Collection());
 
         self::assertEquals(Str::of($this->title), $book['tx_lisztcommon_body']);
         self::assertEquals(Str::of($this->title), $bookSection['tx_lisztcommon_body']);
@@ -231,7 +236,7 @@ final class BibEntryProcessorTest extends UnitTestCase
      */
     public function bookFooterIsProcessedCorrectly(): void
     {
-        $book = $this->subject->process($this->exampleBookArray, new Collection(), new Collection());
+        $book = $this->subject->process($this->exampleBookArray, [], new Collection(), new Collection());
         $expected = Str::of(
             'hg. von ' . $this->editorFirstName . ' ' . $this->editorLastName . ', ' .
             'übers. von ' . $this->translatorFirstName . ' ' . $this->translatorLastName . ', ' .
@@ -249,7 +254,7 @@ final class BibEntryProcessorTest extends UnitTestCase
      */
     public function bookSectionFooterIsProcessedCorrectly(): void
     {
-        $bookSection = $this->subject->process($this->exampleBookSectionArray, new Collection(), new Collection());
+        $bookSection = $this->subject->process($this->exampleBookSectionArray, [], new Collection(), new Collection());
         $expected = Str::of(
             'in: ' . $this->bookTitle . ', ' .
             'hg. von ' . $this->editorFirstName . ' ' . $this->editorLastName . ', ' .
@@ -269,7 +274,7 @@ final class BibEntryProcessorTest extends UnitTestCase
      */
     public function articleFooterIsProcessedCorrectly(): void
     {
-        $article = $this->subject->process($this->exampleArticleArray, new Collection(), new Collection());
+        $article = $this->subject->process($this->exampleArticleArray, [], new Collection(), new Collection());
         $expected = Str::of(
             'in: ' . $this->bookTitle . ' ' .
             $this->volume .
