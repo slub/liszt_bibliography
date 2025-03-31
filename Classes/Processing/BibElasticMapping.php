@@ -15,17 +15,18 @@ class BibElasticMapping
                 'mappings' => [
                     'dynamic' => false,
                     'properties' => [
+                        'itemType' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'version' => [ 'type' => 'long' ],
                         'title' => [ 'type' => 'text'],
                         'university' => [ 'type' => 'text'],
                         'bookTitle' => [ 'type' => 'text'],
                         'series' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'publicationTitle' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
+                        'language' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'place' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'date' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'archiveLocation' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
-                        'itemType' => [ 'type' => 'keyword'],
-                        'journalTitle'  => [ 'type' => 'keyword'],
+                        'journalTitle'  => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'creators' => [
                             'type' => 'nested',
                             'properties' => [
@@ -39,7 +40,6 @@ class BibElasticMapping
                                             'type' => 'keyword', 'ignore_above' => 256
                                         ],
                                     ],
-                                    'copy_to' => 'creators.fullName'
                                 ],
                                 'lastName' => [
                                     'type' => 'text',
@@ -48,17 +48,51 @@ class BibElasticMapping
                                             'type' => 'keyword', 'ignore_above' => 256
                                         ]
                                     ],
-                                    'copy_to' => 'creators.fullName'
                                 ],
-                                'fullName' => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
+                                'name' => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ]
+                                    ],
+                                ],
+                                BibEntryProcessor::FULLNAME_KEY => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
                             ]
                         ],
                         'fulltext' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_header' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_body' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_footer' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_searchable' => ['type' => 'text', 'copy_to' => 'fulltext'],
-                        'tx_lisztcommon_boosted' => ['type' => 'text'],
+                        BibEntryProcessor::HEADER_FIELD => [ 'type' => 'text' ],
+                        BibEntryProcessor::BODY_FIELD => [ 'type' => 'text' ],
+                        BibEntryProcessor::FOOTER_FIELD => [ 'type' => 'text' ],
+                        BibEntryProcessor::SEARCHABLE_FIELD => ['type' => 'text', 'copy_to' => 'fulltext'],
+                        BibEntryProcessor::BOOSTED_FIELD => ['type' => 'text'],
+                        BibEntryProcessor::AUTHORS_FIELD => [
+                            'type' => 'nested',
+                            'properties' => [
+                                BibEntryProcessor::FULLNAME_KEY => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ],
+                                    ],
+                                ],
+                            ]
+                        ],
+                        BibEntryProcessor::EDITORS_FIELD => [
+                            'type' => 'nested',
+                            'properties' => [
+                                BibEntryProcessor::FULLNAME_KEY => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ],
+                                    ],
+                                ],
+                            ]
+                        ],
+                        BibEntryProcessor::YEAR_FIELD => [ 'type' => 'short' ],
                     ]
                 ]
             ]

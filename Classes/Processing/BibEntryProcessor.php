@@ -16,72 +16,204 @@ namespace Slub\LisztBibliography\Processing;
 use Illuminate\Support\Stringable;
 use Illuminate\Support\Str;
 use Slub\LisztCommon\Common\Collection;
+use Slub\LisztCommon\Processing\IndexProcessor;
+use Psr\Log\LoggerInterface;
 
-class BibEntryProcessor
+class BibEntryProcessor extends IndexProcessor
 {
+    const AUTHORS_FIELD = 'tx_lisztbibliography_authors';
+    const EDITORS_FIELD = 'tx_lisztbibliography_editors';
 
-    public static function process(
+    const YEAR_FIELD = 'tx_lisztbibliography_year';
+    const FULLNAME_KEY = 'fullName';
+
+    public function __construct(
+        private readonly LoggerInterface $logger
+    )
+    { }
+
+    //Todo: maybe we find a better name for "process" ;-)
+    public function process(
         array $bibliographyItem,
+        array $collectionToItemTypeMap,
         Collection $localizedCitations,
         Collection $teiDataSets
     ): array
     {
-        // check for required Fields
-        self::validateFields($bibliographyItem);
-
         $key = $bibliographyItem['key'];
+        $bibliographyItem['itemType'] = $this->calculateItemType($bibliographyItem, $collectionToItemTypeMap);
         $bibliographyItem['localizedCitations'] = [];
         foreach ($localizedCitations as $locale => $localizedCitation) {
             $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
         }
         $bibliographyItem['tei'] = $teiDataSets->get($key);
-        $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::getAuthorHeader());
-        if ($bibliographyItem['tx_lisztcommon_header'] == '') {
-            $bibliographyItem['tx_lisztcommon_header'] = self::buildListingField($bibliographyItem, BibEntryConfig::getEditorHeader());
+        $bibliographyItem[self::HEADER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getAuthorHeader());
+        if ($bibliographyItem[self::HEADER_FIELD] == '') {
+            $bibliographyItem[self::HEADER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getEditorHeader());
         }
-        $bibliographyItem['tx_lisztcommon_body'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBody());
-        switch($bibliographyItem['itemType']) {
+        $bibliographyItem[self::BODY_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBody());
+
+        switch ($bibliographyItem[self::TYPE_FIELD]) {
             case 'book':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
                 break;
             case 'bookSection':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getBookSectionFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBookSectionFooter());
                 break;
             case 'journalArticle':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getArticleFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getArticleFooter());
                 break;
             case 'thesis':
-                $bibliographyItem['tx_lisztcommon_footer'] = self::buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
+                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
                 break;
         }
 
-        $bibliographyItem['tx_lisztcommon_searchable'] = self::buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
-        $bibliographyItem['tx_lisztcommon_boosted'] = self::buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
+        $bibliographyItem[self::SEARCHABLE_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
+        $bibliographyItem[self::BOOSTED_FIELD]    = $this->buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
+
+        $bibliographyItem[self::AUTHORS_FIELD] = $this->buildNestedField($bibliographyItem, BibEntryConfig::AUTHORS_FIELD);
+        $bibliographyItem[self::EDITORS_FIELD] = $this->buildNestedField($bibliographyItem, BibEntryConfig::EDITORS_FIELD);
+        $bibliographyItem[self::YEAR_FIELD]    = $this->buildYearField($bibliographyItem, BibEntryConfig::DATE);
+
         return $bibliographyItem;
     }
 
-    public static function buildListingField(
+    protected function calculateItemType(
+        array $bibliographyItem,
+        array $collectionToItemTypeMap
+    ): string {
+        foreach ($bibliographyItem['collections'] as $itemCollection) {
+            foreach ($collectionToItemTypeMap as $mapCollection => $itemType) {
+                if ($itemCollection == $mapCollection) {
+                    return $itemType;
+                }
+            }
+        }
+        return $bibliographyItem['itemType'];
+    }
+
+    protected function buildListingField(
         array $bibliographyItem,
         array $fieldConfig
-    ): Stringable
-    {
-        return Collection::wrap($fieldConfig)->
-            map( function($field) use ($bibliographyItem) { return self::buildListingEntry($field, $bibliographyItem); })->
+    ): Stringable {
+        $collectedFields = Collection::wrap($fieldConfig)
+            ->map(function($field) use ($bibliographyItem) {
+                return $this->buildListingEntry($field, $bibliographyItem);
+            });
+        if (is_array($collectedFields->get(0))) {
+            return $collectedFields->get(0);
+        }
+        return $collectedFields->
             join('')->
             trim();
     }
 
-    private static function buildListingEntry(array $field, array $bibliographyItem): ?Stringable
+    protected function buildYearField(
+        array $bibliographyItem,
+        array $fieldConfig
+    ): ?int {
+        if (!isset($fieldConfig['field'])) {
+            $this->logger->info('no YEAR field in fieldConfig');
+            return null;
+        }
+        $dateField = $fieldConfig['field'];
+        $dateString = $bibliographyItem[$dateField] ?? '';
+        if (!is_string($dateString) || trim($dateString) === '') {
+            $this->logger->info('YEAR field is empty in {field} for id {id}', [
+                'field' => $dateField,
+                'value' => $dateString,
+                'id' => $bibliographyItem['key'] ?? ''
+            ]);
+            return null;
+        }
+        // find all 4 digit matches and use the last one
+        if (preg_match_all('/\b(\d{4})\b/', $dateString, $matches) && !empty($matches[1])) {
+            $lastIndex = count($matches[1]) - 1;
+            return (int)$matches[1][$lastIndex];
+        }
+
+        $this->logger->info('not 4-digit YEAR field found {dateString} in id {id}', [
+            'dateString' => $dateString,
+            'id' => $bibliographyItem['key'] ?? ''
+        ]);
+        return null;
+    }
+
+/*
+ * function for nested fields with an array of object,
+ * maybe ist much easier with an own BibEntryConfig
+*/
+    protected function buildNestedField(
+        array $bibliographyItem,
+        array $fieldConfig
+    ): array
+    {
+        return Collection::wrap($fieldConfig)->
+            map(function ($field) use ($bibliographyItem) {
+            $entry = $this->buildListingEntry($field, $bibliographyItem);
+
+            // buildListingEntry can return null if no field creators exist
+            if ($entry === null) {
+                // ignore or return empty array ?
+                return []; //
+            }
+
+            if (!is_array($entry)) {
+                $this->logger->info('buildListingEntry did not return an array for {field} in id {id}', [
+                    'field' => $field['field'],
+                    'id' => $bibliographyItem['key'] ?? ''
+                ]);
+                throw new \UnexpectedValueException(
+                    'Expected array from buildListingEntry, but got: ' . gettype($entry)
+                );
+            }
+            return $entry;
+            })->
+            flatMap(function (array $item): Collection {
+                return Collection::wrap($item)->map( function ($i) {
+                    return [self::FULLNAME_KEY => $i];
+                    });
+            })->toArray();
+
+        /*
+        returns:
+        (
+            [0] => Array
+            ([fullName] => Illuminate\Support\Stringable Object ([value:protected] => Michael Saffle))
+
+            [1] => Array
+            ([fullName] => Illuminate\Support\Stringable Object([value:protected] => Michael Saffle)
+        )
+        */
+    }
+
+    protected function buildListingEntry(array $field, array $bibliographyItem): Stringable|array|null
     {
         // return empty string if field does not exist
         if (
             isset($field['field']) &&
             !isset($bibliographyItem[$field['field']]) ||
             isset($field['compound']['field']) &&
-            !isset($bibliographyItem[$field['compound']['field']])
+            !isset($bibliographyItem[$field['compound']['field']]) ||
+            isset($field['compoundArray']['field']) &&
+            !isset($bibliographyItem[$field['compoundArray']['field']])
         ) {
             return null;
         }
+
+        // return an array when compoundArray option is set
+        if (isset($field['compoundArray'])) {
+            // build compound fields
+            return Collection::wrap($bibliographyItem[$field['compoundArray']['field']])->
+                // get selected strings
+                map(function ($bibliographyCell) use ($field) {
+                    return $this->processCompound($field['compoundArray'], $bibliographyCell);
+                })->
+                // filter out non fitting fields
+                filter()->
+                toArray();
+        }
+
         // return empty string if conditions are not met
         if (
             isset($field['conditionField']) &&
@@ -109,7 +241,7 @@ class BibEntryProcessor
             $compoundString = Collection::wrap($bibliographyItem[$field['compound']['field']])->
                 // get selected strings
                 map(function ($bibliographyCell) use ($field) {
-                    return self::processCompound($field['compound'], $bibliographyCell);
+                    return $this->processCompound($field['compound'], $bibliographyCell);
                 })->
                 // filter out non fitting fields
                 filter()->
@@ -151,11 +283,11 @@ class BibEntryProcessor
         return $fieldString;
     }
 
-    private static function processCompound(array $field, array $bibliographyCell): ?Stringable
+    protected function processCompound(array $field, array $bibliographyCell): ?Stringable
     {
         $compoundString = Collection::wrap($field['fields'])->
             // get selected strings
-            map( function ($field) use ($bibliographyCell) { return self::buildListingEntry($field, $bibliographyCell); })->
+            map( function ($field) use ($bibliographyCell) { return $this->buildListingEntry($field, $bibliographyCell); })->
             // filter out empty fields
             filter()->
             // conditionally reverse and join fields
@@ -174,57 +306,5 @@ class BibEntryProcessor
             return null;
         }
         return $compoundString;
-    }
-
-    private static function validateFields(array $bibliographyItem): void
-    {
-        $fieldValidations = BibEntryConfig::getRequiredFields();
-        $warnings = []; // Array to store warnings
-
-        foreach ($fieldValidations as $field => $constraints) {
-            if (!isset($bibliographyItem[$field])) {
-                $warnings[] = "The required field '{$field}' is missing in the bibliography item.";
-                continue;
-            }
-
-            $value = $bibliographyItem[$field];
-            foreach ($constraints as $constraint => $constraintValue) {
-                switch ($constraint) {
-                    case 'type':
-                        if ($constraintValue === 'string' && !is_string($value)) {
-                            $warnings[] = "The field '{$field}' should be a string.";
-                        } elseif ($constraintValue === 'int' && !is_int($value)) {
-                            $warnings[] = "The field '{$field}' should be an integer.";
-                        } elseif ($constraintValue === 'array' && !is_array($value)) {
-                            $warnings[] = "The field '{$field}' should be an array.";
-                        } elseif (strpos($constraintValue, 'date:') === 0) {
-                            $format = substr($constraintValue, 5);
-                            $d = \DateTime::createFromFormat($format, $value);
-                            if (!$d || $d->format($format) !== $value) {
-                                $warnings[] = "The field '{$field}' should be a date in the format '{$format}'.";
-                            }
-                        }
-                        break;
-                    case 'not_empty':
-                        if ($constraintValue && empty($value)) {
-                            $warnings[] = "The field '{$field}' must not be empty.";
-                        }
-                        break;
-                    case 'min_length':
-                        if (strlen($value) < $constraintValue) {
-                            $warnings[] = "The field '{$field}' should be at least {$constraintValue} characters long.";
-                        }
-                        break;
-                }
-            }
-        }
-
-        // Output all collected warnings, if any
-        if (!empty($warnings)) {
-            echo 'Warning for bibliography item: '. $bibliographyItem['key'] . "\n";
-            foreach ($warnings as $warning) {
-                echo $warning . "\n";
-            }
-        }
     }
 }
