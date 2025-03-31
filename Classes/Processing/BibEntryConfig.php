@@ -15,6 +15,39 @@ namespace Slub\LisztBibliography\Processing;
 
 class BibEntryConfig
 {
+    const REQUIRED_FIELDS = [
+        'key' => [
+            'type' => 'string',
+            'not_empty' => true,
+            'min_length' => 3,
+            'critical' => true, // skip this doc from indexing
+        ],
+        'title' => [
+            'not_empty' => true,
+            'critical' => true,
+        ],
+        'itemType' => [
+            'type' => 'string',
+            'not_empty' => true,
+            'critical' => true,
+            'allowedValues' => ['book', 'bookSection', 'journalArticle', 'thesis', 'webpage', 'encyclopediaArticle', 'attachment']
+        ],
+        'place' => [
+            'type' => 'string',
+            'not_empty' => true,
+        ],
+        'creators' => [
+            'type' => 'array',
+            'min_array_length' => 1,
+        ],
+        'date' => [
+            'type' => 'string',
+            'not_empty' => true,
+            'min_length' => 4,
+            'contains_year' => true, // new constrain type für special zotero date field (string with (multiple) 4-digit numbers)
+        ],
+
+    ];
     const AUTHOR = [
         'compound' => [
             'fields' => [
@@ -300,6 +333,12 @@ class BibEntryConfig
             ]
         ]
     ];
+
+
+    public static function getRequiredFields(): array
+    {
+        return self::REQUIRED_FIELDS;
+    }
 
 
     public static function getAuthorHeader(): array

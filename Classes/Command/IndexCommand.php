@@ -60,6 +60,7 @@ class IndexCommand extends Command
 
     public function __construct(
         private readonly SiteFinder $siteFinder,
+        // Note the logLevel setting in the Extension Configuration
         private readonly LoggerInterface $logger
     ) {
         parent::__construct();
@@ -127,12 +128,12 @@ class IndexCommand extends Command
         if ($version == 0) {
             $this->io->text('Full data synchronization requested.');
             $this->fullSync();
-            $this->logger->info('Full data synchronization successful.');
+            $this->logger->notice('Full data synchronization successful.');
         } else {
             $this->io->text('Synchronizing all data from version ' . $version);
             $this->collectionIds->
                 each( function($collectionId) use ($version) { $this->versionedSync($version, $collectionId); });
-            $this->logger->info('Versioned data synchronization successful.');
+            $this->logger->notice('Versioned data synchronization successful.');
         }
         return Command::SUCCESS;
     }

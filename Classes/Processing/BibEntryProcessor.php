@@ -28,6 +28,7 @@ class BibEntryProcessor extends IndexProcessor
     const FULLNAME_KEY = 'fullName';
 
     public function __construct(
+        // Note the logLevel setting in the Extension Configuration
         private readonly LoggerInterface $logger
     )
     { }
@@ -40,6 +41,12 @@ class BibEntryProcessor extends IndexProcessor
         Collection $teiDataSets
     ): array
     {
+
+        // validate fields and return 'skipped' if this doc should bei skipped
+        if (!$this->validateFields($bibliographyItem)) {
+            return ['key' => $bibliographyItem['key'], 'skipped' => true];
+        }
+
         $key = $bibliographyItem['key'];
         $bibliographyItem['itemType'] = $this->calculateItemType($bibliographyItem, $collectionToItemTypeMap);
         $bibliographyItem['localizedCitations'] = [];
@@ -108,41 +115,40 @@ class BibEntryProcessor extends IndexProcessor
             trim();
     }
 
+
+    /**
+     * Extracts a year value from a date string
+     * Assumes that validation has already been performed by validateFields()
+     */
     protected function buildYearField(
         array $bibliographyItem,
         array $fieldConfig
     ): ?int {
         if (!isset($fieldConfig['field'])) {
-            $this->logger->info('no YEAR field in fieldConfig');
-            return null;
+            return null; // No logging needed - this is a configuration error
         }
+
         $dateField = $fieldConfig['field'];
         $dateString = $bibliographyItem[$dateField] ?? '';
+
+        // Only process valid non-empty strings (validation already done)
         if (!is_string($dateString) || trim($dateString) === '') {
-            $this->logger->info('YEAR field is empty in {field} for id {id}', [
-                'field' => $dateField,
-                'value' => $dateString,
-                'id' => $bibliographyItem['key'] ?? ''
-            ]);
             return null;
         }
+
         // find all 4 digit matches and use the last one
         if (preg_match_all('/\b(\d{4})\b/', $dateString, $matches) && !empty($matches[1])) {
             $lastIndex = count($matches[1]) - 1;
             return (int)$matches[1][$lastIndex];
         }
-
-        $this->logger->info('not 4-digit YEAR field found {dateString} in id {id}', [
-            'dateString' => $dateString,
-            'id' => $bibliographyItem['key'] ?? ''
-        ]);
         return null;
     }
 
-/*
- * function for nested fields with an array of object,
- * maybe ist much easier with an own BibEntryConfig
-*/
+
+    /*
+     * function for nested fields with an array of object,
+     * maybe ist much easier with an own BibEntryConfig
+    */
     protected function buildNestedField(
         array $bibliographyItem,
         array $fieldConfig
@@ -159,7 +165,7 @@ class BibEntryProcessor extends IndexProcessor
             }
 
             if (!is_array($entry)) {
-                $this->logger->info('buildListingEntry did not return an array for {field} in id {id}', [
+                $this->logger->warning('buildListingEntry did not return an array for {field} in id {id}', [
                     'field' => $field['field'],
                     'id' => $bibliographyItem['key'] ?? ''
                 ]);
@@ -307,4 +313,90 @@ class BibEntryProcessor extends IndexProcessor
         }
         return $compoundString;
     }
+
+
+    private function validateFields(array $bibliographyItem): bool
+    {
+        $fieldValidations = BibEntryConfig::getRequiredFields();
+        $warnings = []; // array for warnings
+        $criticalWarnings = []; // array for critical warnings to skip this doc
+        foreach ($fieldValidations as $field => $constraints) {
+            $isCritical = $constraints['critical'] ?? false;
+            if (!isset($bibliographyItem[$field])) {
+                $message = "The required field '{$field}' is missing in the bibliography entry.";
+                if ($isCritical) {
+                    $criticalWarnings[] = $message;
+                } else {
+                    $warnings[] = $message;
+                }
+                continue;
+            }
+            $value = $bibliographyItem[$field];
+            foreach ($constraints as $constraint => $constraintValue) {
+                if (in_array($constraint, ['critical'])) continue; // skip configuration fields
+                $message = null;
+                switch ($constraint) {
+                    case 'type':
+                        if ($constraintValue === 'string' && !is_string($value)) {
+                            $warnings[] = "The field '{$field}' should be a string.";
+                        } elseif ($constraintValue === 'int' && !is_int($value)) {
+                            $warnings[] = "The field '{$field}' should be an integer.";
+                        } elseif ($constraintValue === 'array' && !is_array($value)) {
+                            $warnings[] = "The field '{$field}' should be an array.";
+                        } elseif (str_starts_with($constraintValue, 'date:')) {
+                            $format = substr($constraintValue, 5);
+                            $d = \DateTime::createFromFormat($format, $value);
+                            if (!$d || $d->format($format) !== $value) {
+                                $warnings[] = "The field '{$field}' should be a date in the format '{$format}'.";
+                            }
+                        }
+                        break;
+                    case 'not_empty':
+                        if ($constraintValue && empty($value)) {
+                            $warnings[] = "The field '{$field}' must not be empty.";
+                        }
+                        break;
+                    case 'min_length':
+                        if (strlen($value) < $constraintValue) {
+                            $warnings[] = "The field '{$field}' should be at least {$constraintValue} characters long.";
+                        }
+                        break;
+                    case 'min_array_length':
+                        if (is_array($value) && count($value) < $constraintValue) {
+                            $warnings[] = "The array '{$field}' should have at least {$constraintValue} elements.";
+                        }
+                        break;
+                    case 'contains_year':
+                        if ($constraintValue && !preg_match('/\b(\d{4})\b/', $value)) {
+                            $message = "The field '{$field}' should contain a valid 4-digit year.";
+                        }
+                        break;
+                    case 'allowedValues':
+                        if (!in_array($value, $constraintValue)) {
+                            $allowedList = implode("', '", $constraintValue);
+                            $message = "The value '{$value}' for field '{$field}' is not allowed. Allowed values are: '{$allowedList}'.";
+                        }
+                        break;
+                }
+                if ($message) {
+                    if ($isCritical) {
+                        $criticalWarnings[] = $message;
+                    } else {
+                        $warnings[] = $message;
+                    }
+                }
+            }
+        }
+        // Log warnings
+        $key = $bibliographyItem['key'] ?? 'Unknown entry';
+        if (!empty($warnings)) {
+            $this->logger->warning("Non-critical warnings for entry {$key}", $warnings);
+        }
+        if (!empty($criticalWarnings)) {
+            $this->logger->error("Critical errors for entry {$key} - skipping", $criticalWarnings);
+            return false; // skip record
+        }
+        return true; // process record
+    }
+
 }
