@@ -153,16 +153,39 @@ class IndexCommand extends Command
 
     private function getSubcollections(string $collectionId): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
-        $response = $client->
-            group($this->extConf['zoteroGroupId'])->
-            collections($collectionId)->
-            collections()->
-            send();
-        Collection::wrap($response->getBody())->
-            recursive()->
-            pluck('key')->
-            each( function ($collectionId) { $this->recordSubcollectionRecursiveley($collectionId); });
+        $apiCounter = self::API_TRIALS;
+        while (true) {
+            try {
+                $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+                $response = $client->
+                group($this->extConf['zoteroGroupId'])->
+                collections($collectionId)->
+                collections()->
+                send();
+
+                Collection::wrap($response->getBody())->
+                recursive()->
+                pluck('key')->
+                each( function ($collectionId) { $this->recordSubcollectionRecursiveley($collectionId); });
+                return; // Exit the loop on success
+
+            } catch (\Exception $e) {
+                $this->logger->warning('Error fetching subcollections: {message}', ['message' => $e->getMessage()]);
+                $this->io->newline(1);
+                $this->io->caution($e->getMessage());
+                $this->io->newline(1);
+
+                if ($apiCounter == 0) {
+                    $this->io->note('Failed to fetch subcollections after {trials} attempts.');
+                    $this->logger->error('Failed to fetch subcollections after {trials} attempts.', ['trials' => self::API_TRIALS]);
+                    throw new \Exception('Error fetching subcollections: ' . $e->getMessage());
+                } else {
+                    $this->logger->notice('Trying again. {count} attempts left.', ['count' => --$apiCounter]);
+                    // Add a short delay before retrying
+                    sleep(1);
+                }
+            }
+        }
     }
 
     private function recordSubcollectionRecursiveley(string $collectionId): void

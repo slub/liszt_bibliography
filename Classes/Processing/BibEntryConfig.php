@@ -32,10 +32,6 @@ class BibEntryConfig
             'critical' => true,
             'allowedValues' => ['book', 'bookSection', 'journalArticle', 'thesis', 'webpage', 'encyclopediaArticle', 'attachment']
         ],
-        'place' => [
-            'type' => 'string',
-            'not_empty' => true,
-        ],
         'creators' => [
             'type' => 'array',
             'min_array_length' => 1,
