@@ -44,6 +44,7 @@ plugin.tx_lisztcommon_searchlisting {
         defaultSortBy = tx_lisztbibliography_year
         defaultSortDirection = asc
         # maxSize is the number of items loaded and hidden for "display more" button
+        # sortByKey is an option to sort the filter items, possible values are: slub (for slub-style sorting in viewhelper) or elastic (for sort in elastic aggs options)
         # the filter fields
         filters {
           0 {
@@ -56,14 +57,18 @@ plugin.tx_lisztcommon_searchlisting {
             type = nested
             key = fullName
             select = multi
-            maxSize = 80
+            maxSize = 100
+            size = 8
+            sortByKey = slub
           }
           2 {
             field = tx_lisztbibliography_editors
             type = nested
             key = fullName
             select = multi
-            maxSize = 80
+            size = 8
+            maxSize = 100
+            sortByKey = slub
           }
           3 {
             field = tx_lisztbibliography_year
