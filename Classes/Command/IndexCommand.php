@@ -38,7 +38,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class IndexCommand extends Command
 {
 
-    const API_TRIALS = 3;
+    protected const API_TRIALS = 3;
 
     protected string $zoteroApiKey;
     protected Collection $bibliographyItems;
@@ -176,7 +176,7 @@ class IndexCommand extends Command
                 $this->io->newline(1);
 
                 if ($apiCounter == 0) {
-                    $this->io->note('Failed to fetch subcollections after {trials} attempts.');
+                    $this->io->note('Failed to fetch subcollections after ' . self::API_TRIALS . ' trials.');
                     $this->logger->error('Failed to fetch subcollections after {trials} attempts.', ['trials' => self::API_TRIALS]);
                     throw new \Exception('Error fetching subcollections: ' . $e->getMessage());
                 } else {
@@ -239,7 +239,6 @@ class IndexCommand extends Command
                 throw new \Exception('Bibliography sync unsuccessful.');
         }
 
-        $apiCounter = self::API_TRIALS;
 
         $this->collectionIds->
             each( function($collectionId) {

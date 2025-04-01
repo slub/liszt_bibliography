@@ -73,6 +73,9 @@ class BibEntryProcessor extends IndexProcessor
             case 'thesis':
                 $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
                 break;
+            case 'printedMusic':
+                // @Matthias: ToDo: special Footer for printedMusic? Default case in switch statement?
+                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
         }
 
         $bibliographyItem[self::SEARCHABLE_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);

@@ -190,6 +190,7 @@ class BibEntryConfig
         'conditionRelation' => 'neq',
     ];
 
+    // Alternatively, it would be possible to solve this by 'copy_to' the existing fields into the 'fulltext' field
     const SEARCHABLE_FIELDS = [
         [
             'compound' => [
@@ -244,6 +245,10 @@ class BibEntryConfig
         ],
         [
             'field' => 'date',
+            'postfix' => ' '
+        ],
+        [
+            'field' => 'key',
             'postfix' => ' '
         ]
     ];
