@@ -38,7 +38,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class IndexCommand extends Command
 {
 
-    const API_TRIALS = 3;
+    protected const API_TRIALS = 3;
 
     protected string $zoteroApiKey;
     protected Collection $bibliographyItems;
@@ -60,6 +60,7 @@ class IndexCommand extends Command
 
     public function __construct(
         private readonly SiteFinder $siteFinder,
+        // Note the logLevel setting in the Extension Configuration
         private readonly LoggerInterface $logger
     ) {
         parent::__construct();
@@ -127,12 +128,12 @@ class IndexCommand extends Command
         if ($version == 0) {
             $this->io->text('Full data synchronization requested.');
             $this->fullSync();
-            $this->logger->info('Full data synchronization successful.');
+            $this->logger->notice('Full data synchronization successful.');
         } else {
             $this->io->text('Synchronizing all data from version ' . $version);
             $this->collectionIds->
                 each( function($collectionId) use ($version) { $this->versionedSync($version, $collectionId); });
-            $this->logger->info('Versioned data synchronization successful.');
+            $this->logger->notice('Versioned data synchronization successful.');
         }
         return Command::SUCCESS;
     }
@@ -152,16 +153,39 @@ class IndexCommand extends Command
 
     private function getSubcollections(string $collectionId): void
     {
-        $client = new ZoteroApi($this->extConf['zoteroApiKey']);
-        $response = $client->
-            group($this->extConf['zoteroGroupId'])->
-            collections($collectionId)->
-            collections()->
-            send();
-        Collection::wrap($response->getBody())->
-            recursive()->
-            pluck('key')->
-            each( function ($collectionId) { $this->recordSubcollectionRecursiveley($collectionId); });
+        $apiCounter = self::API_TRIALS;
+        while (true) {
+            try {
+                $client = new ZoteroApi($this->extConf['zoteroApiKey']);
+                $response = $client->
+                group($this->extConf['zoteroGroupId'])->
+                collections($collectionId)->
+                collections()->
+                send();
+
+                Collection::wrap($response->getBody())->
+                recursive()->
+                pluck('key')->
+                each( function ($collectionId) { $this->recordSubcollectionRecursiveley($collectionId); });
+                return; // Exit the loop on success
+
+            } catch (\Exception $e) {
+                $this->logger->warning('Error fetching subcollections: {message}', ['message' => $e->getMessage()]);
+                $this->io->newline(1);
+                $this->io->caution($e->getMessage());
+                $this->io->newline(1);
+
+                if ($apiCounter == 0) {
+                    $this->io->note('Failed to fetch subcollections after ' . self::API_TRIALS . ' trials.');
+                    $this->logger->error('Failed to fetch subcollections after {trials} attempts.', ['trials' => self::API_TRIALS]);
+                    throw new \Exception('Error fetching subcollections: ' . $e->getMessage());
+                } else {
+                    $this->logger->notice('Trying again. {count} attempts left.', ['count' => --$apiCounter]);
+                    // Add a short delay before retrying
+                    sleep(1);
+                }
+            }
+        }
     }
 
     private function recordSubcollectionRecursiveley(string $collectionId): void
@@ -215,7 +239,6 @@ class IndexCommand extends Command
                 throw new \Exception('Bibliography sync unsuccessful.');
         }
 
-        $apiCounter = self::API_TRIALS;
 
         $this->collectionIds->
             each( function($collectionId) {
