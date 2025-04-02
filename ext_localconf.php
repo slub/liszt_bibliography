@@ -12,12 +12,13 @@ defined('TYPO3') or die();
 
 $extConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('liszt_bibliography');
 
-$logLevel = match((int)$extConf['logLevel']) {
+$logLevel = match((int)($extConf['logLevel'] ?? 3)) {
     0 => LogLevel::INFO,
     1 => LogLevel::NOTICE,
     2 => LogLevel::WARNING,
     default => LogLevel::ERROR
 };
+
 
 // Logfile for IndexCommand
 $GLOBALS['TYPO3_CONF_VARS']['LOG']['Slub']['LisztBibliography']['Command']['IndexCommand']['writerConfiguration'] = [
