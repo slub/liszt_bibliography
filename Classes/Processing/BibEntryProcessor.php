@@ -198,7 +198,6 @@ class BibEntryProcessor extends IndexProcessor
 
     protected function buildListingEntry(array $field, array $bibliographyItem): Stringable|array|null
     {
-        // return empty string if field does not exist
         if (
             isset($field['field']) &&
             !isset($bibliographyItem[$field['field']]) ||
@@ -210,7 +209,7 @@ class BibEntryProcessor extends IndexProcessor
             return null;
         }
 
-        // return an array when compoundArray option is set
+        // return an collection when compoundArray option is set
         if (isset($field['compoundArray'])) {
             // build compound fields
             return Collection::wrap($bibliographyItem[$field['compoundArray']['field']])->
@@ -223,7 +222,7 @@ class BibEntryProcessor extends IndexProcessor
                 toArray();
         }
 
-        // return empty string if conditions are not met
+        // return null if conditions are not met
         if (
             isset($field['conditionField']) &&
             isset($field['conditionValue']) &&
