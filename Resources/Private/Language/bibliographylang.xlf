@@ -4,8 +4,14 @@
         <header/>
         <body>
             <trans-unit id="itemType" >
-                <source>Typ</source>
+                <source>Medientyp</source>
             </trans-unit>
+			<trans-unit id="title" >
+				<source>Titel</source>
+			</trans-unit>
+			<trans-unit id="shortTitle" >
+				<source>Kurztitel</source>
+			</trans-unit>
 			<trans-unit id="tx_lisztbibliography_creators" >
 				<source>Beteiligte</source>
 			</trans-unit>
@@ -23,6 +29,33 @@
 			</trans-unit>
 			<trans-unit id="language" >
 				<source>Sprache</source>
+			</trans-unit>
+			<trans-unit id="published" >
+				<source>Erschienen</source>
+			</trans-unit>
+			<trans-unit id="pages" >
+				<source>Umfang</source>
+			</trans-unit>
+			<trans-unit id="publishedIn" >
+				<source>Erschienen in</source>
+			</trans-unit>
+			<trans-unit id="author" >
+				<source>Verfasser:in</source>
+			</trans-unit>
+			<trans-unit id="editor" >
+				<source>Herausgeber:in</source>
+			</trans-unit>
+			<trans-unit id="translator" >
+				<source>Übersetzer:in</source>
+			</trans-unit>
+			<trans-unit id="seriesEditor" >
+				<source>Serienherausgeber:in</source>
+			</trans-unit>
+			<trans-unit id="bookAuthor" >
+				<source>Buchautor:in</source>
+			</trans-unit>
+			<trans-unit id="contributor" >
+				<source>Beteiligte:r</source>
 			</trans-unit>
 			<trans-unit id="publicationTitle" >
 				<source>Journaltitel</source>
