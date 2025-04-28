@@ -263,9 +263,9 @@ class IndexCommand extends Command
                 $cursor = 0;
                 $this->io->progressStart($total);
                 while ($cursor < $total) {
+                    $apiCounter = self::API_TRIALS;
                     try {
                         $this->sync($cursor, 0, $collectionId);
-                        $apiCounter = self::API_TRIALS;
                         $remainingItems = $total - $cursor;
                         $advanceBy = min($remainingItems, $this->bulkSize);
                         $this->io->progressAdvance($advanceBy);
@@ -274,12 +274,26 @@ class IndexCommand extends Command
                         $this->io->newline(1);
                         $this->io->caution($e->getMessage());
                         $this->io->newline(1);
-                        if ($apiCounter == 0) {
-                            $this->io->note('Giving up after ' . self::API_TRIALS . ' trials.');
-                            $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} 500 errors.', ['trials' => self::API_TRIALS]);
+
+                        // Check if it's a 500 error from Zotero API
+                        $isServerError500 = false;
+                        if (method_exists($e, 'getCode') && $e->getCode() == 500) {
+                            $isServerError500 = true;
+                        }
+
+                        if ($isServerError500 && $apiCounter <= 1) {
+                            $this->io->note('Giving up after ' . self::API_TRIALS . ' trials in function: fullSync.');
+                            $this->logger->error('Bibliography sync unsuccessful. Zotero API sent {trials} error {error}.', ['trials' => self::API_TRIALS, 'error' => $e->getCode()]);
                             throw new \Exception('Bibliography sync unsuccessful.');
-                        } else {
-                            $this->io->note('Trying again. ' . --$apiCounter . ' trials left.');
+                        } else if ($isServerError500) {
+                            $this->io->note('Trying fullSync again. ' . --$apiCounter . ' trials left.');
+                            sleep(1);
+                        }
+                        else {
+                            // all other errors
+                            $this->io->note('Bibliography sync unsuccessful in fullSync: ' . $e->getMessage());
+                            $this->logger->error('Error during fullSync: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+                            throw new \Exception('Bibliography sync unsuccessful.');
                         }
                     }
                 }
@@ -468,23 +482,61 @@ class IndexCommand extends Command
             $this->io->text('no new bibliographic entries');
             return;
         }
-        $params = [ 'body' => [] ];
+
+        $params = ['body' => []];
         $bulkCount = 0;
+
         foreach ($this->dataSets as $document) {
-            $params['body'][] = [ 'index' =>
-                [
+            $params['body'][] = [
+                'index' => [
                     '_index' => $this->indexName,
                     '_id' => $document['key']
                 ]
             ];
-            $params['body'][] = json_encode($document);
 
+            $encoded = json_encode($document);
+            if ($encoded === false || $encoded === '[]' || $encoded === '{}') {
+                $this->logger->warning('Document cannot be encoded correctly', [
+                    'document' => $document,
+                    '_id' => $document['key'],
+                    'json_error' => json_last_error_msg()
+                ]);
+                // Skip invalid documents
+                 continue;
+            }
+
+            $params['body'][] = $encoded;
+
+            // Send when bulk size is reached
             if (!(++$bulkCount % $this->extConf['elasticBulkSize'])) {
-                $this->client->bulk($params);
-                $params = [ 'body' => [] ];
+                try {
+                    $this->client->bulk($params);
+                } catch (\Exception $e) {
+                    $this->logger->error('Elasticsearch error during bulk operation: ' . $e->getMessage(), [
+                        'params' => $params,
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    $this->io->note('Error during Elasticsearch bulk operation: ' . $e->getMessage());
+                    throw new \Exception('Bibliography sync unsuccessful because of error during Elasticsearch bulk operation.');
+                }
+
+                $params = ['body' => []];
             }
         }
-        $this->client->bulk($params);
+
+        // Send remaining documents, but only if the body is not empty
+        if (!empty($params['body'])) {
+            try {
+                $this->client->bulk($params);
+            } catch (\Exception $e) {
+                $this->logger->error('Elasticsearch error at the end of bulk processing: ' . $e->getMessage(), [
+                    'params' => $params,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                $this->io->note('Error at the end of Elasticsearch bulk processing: ' . $e->getMessage());
+                throw new \Exception('Bibliography sync unsuccessful because of error at the end of Elasticsearch bulk processing.');
+            }
+        }
     }
 
     protected function swapIndexAliases(string $tempIndexAlias): void
