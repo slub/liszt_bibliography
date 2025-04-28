@@ -1,0 +1,226 @@
+
+{namespace lc=Slub\LisztCommon\ViewHelpers}
+<html
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:i="http://typo3.org/ns/Quellenform/Iconpack/ViewHelpers"
+    xmlns:lc="http://typo3.org/ns/Quellenform/LisztCommon/ViewHelpers"
+    data-namespace-typo3-fluid="true">
+<f:variable name="languageFilePath">LLL:EXT:{settings.extensionName}/Resources/Private/Language/{settings.languageFile}.xlf</f:variable>
+
+<f:render partial="DetailBreadcrumb" arguments="{_all}" />
+
+<main role="main" id="page-content">
+    <div class="container-xl sidebar-left grid grid-3col-md searchdetail">
+
+
+<aside class="sidebar">
+    <div class="frame frame-small-mb">
+        <div class="searchdetail-item-icon"><i:icon iconfig="{lc:ItemTypeIconName(iconPackKey: 'lziconsr', itemType: searchResult._source.itemType)}" preferredRenderTypes="svgSprite" additionalAttributes="{aria-hidden:'true'}" /></div>
+    </div>
+</aside>
+
+<div class="content grid-colspan-md-2">
+    <div class="frame">
+        <dl class="searchdetail-list">
+            <div>
+            <dt>{f:translate(key: '{languageFilePath}:itemType', default: 'itemType')}</dt>
+            <dd>{f:translate(key: '{languageFilePath}:itemType_{searchResult._source.itemType}', default: '{searchResult._source.itemType}')}</dd>
+            </div>
+            <div>
+            <dt>{f:translate(key: '{languageFilePath}:title', default: 'title')}</dt>
+            <dd>
+                {searchResult._source.title}
+            </dd>
+            </div>
+            <div>
+                <dt>{f:translate(key: '{languageFilePath}:tx_lisztbibliography_creators', default: 'tx_lisztbibliography_creators')}</dt>
+                <dd>
+                    <f:if condition="{searchResult._source.creators}">
+                        <f:then>
+                            <ul>
+                                <f:for each="{searchResult._source.creators}" as="creator">
+                                    <li>
+                                        <f:if condition="{creator.firstName}">
+                                            {creator.firstName}
+                                        </f:if>
+                                        <f:if condition="{creator.lastName}">
+                                            {creator.lastName}
+                                        </f:if>
+                                        <f:if condition="{creator.creatorType}">
+                                            (<span>{f:translate(key: '{languageFilePath}:{creator.creatorType}', default: '{creator.creatorType}')}</span>)
+                                        </f:if>
+                                    </li>
+                                </f:for>
+                            </ul>
+                        </f:then>
+                        <f:else>
+                            <p>No Creators found.</p>
+                        </f:else>
+                    </f:if>
+                </dd>
+            </div>
+            <f:if condition="{searchResult._source.itemType} == 'book' || {searchResult._source.itemType} == 'printedMusic'">
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:published', default: 'published')}" values="{0:searchResult._source.place, 1:searchResult._source.date}" />
+            </f:if>
+
+            <f:if condition="{searchResult._source.itemType} == 'book'">
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{0:searchResult._source.series, 1:searchResult._source.seriesNumber}" />
+            </f:if>
+
+            <f:if condition="{searchResult._source.itemType} == bookSection">
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{0:searchResult._source.bookTitle, 1:searchResult._source.place, 2:searchResult._source.date, 3:searchResult._source.pages}" />
+            </f:if>
+
+            <f:if condition="{searchResult._source.itemType} == journalArticle">
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{0:searchResult._source.publicationTitle, 'Bd. ':searchResult._source.volume, 2:searchResult._source.date, 3:searchResult._source.pages}" />
+            </f:if>
+
+            <f:if condition="{searchResult._source.itemType} == printedMusic">
+               <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{0:searchResult._source.series, 1:searchResult._source.seriesNumber, 2:searchResult._source.volume}" />
+            </f:if>
+
+            <f:if condition="{searchResult._source.itemType} == thesis">
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:published', default: 'published')}" values="{0:searchResult._source.university, 1:searchResult._source.place, 2:searchResult._source.date}" />
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{0:searchResult._source.publicationTitle, 1:searchResult._source.volume}" />
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:pages', default: 'pages')}" values="{0:searchResult._source.pages}" />
+            </f:if>
+
+            <f:if condition="{searchResult._source.itemType} == encyclopediaArticle">
+                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{0:searchResult._source.encyclopediaTitle, 1:searchResult._source.volume, 2:searchResult._source.place, 3:searchResult._source.date, 4:searchResult._source.pages}" />
+            </f:if>
+
+            <div>
+                <dt>{f:translate(key: '{languageFilePath}:language', default: 'language')}</dt>
+                <dd>
+                    {searchResult._source.language}
+                </dd>
+            </div>
+
+
+            <div>
+                <dt>Url</dt>
+                <dd>
+                    <f:uri.page absolute="1" />{searchResult._source.key}
+                </dd>
+            </div>
+
+            <div>
+                <dt>{f:translate(key: '{languageFilePath}:shortTitle', default: 'shortTitle')}</dt>
+                <dd>
+                    {searchResult._source.shortTitle}
+                </dd>
+            </div>
+
+            <div>
+                <dt>ID</dt>
+                <dd>
+                    {searchResult._source.key}
+                </dd>
+            </div>
+
+
+        </dl>
+
+
+
+
+       <f:comment>
+        <p>
+            <strong>Title:</strong> {searchResult._source.title}
+        </p>
+        <p>
+            <strong>BookTitle:</strong> {searchResult._source.bookTitle}
+        </p>
+        <p>
+            <strong>University:</strong> {searchResult._source.university}
+        </p>
+        <p>
+            <strong>journalAbbreviation:</strong> {searchResult._source.journalAbbreviation}
+        </p>
+        <p>
+            <strong>Series:</strong> {searchResult._source.series}
+        </p>
+        <p>
+            <strong>publicationTitle:</strong> {searchResult._source.publicationTitle}
+        </p>
+        <p>
+            <strong>Volume:</strong> {searchResult._source.volume}
+        </p>
+        <p>
+            <strong>Issue:</strong> {searchResult._source.issue}
+        </p>
+        <p>
+            <strong>Place:</strong> {searchResult._source.place}
+        </p>
+        <p>
+            <strong>Date:</strong> {searchResult._source.date}
+        </p>
+        <p>
+            <strong>Pages:</strong> {searchResult._source.pages}
+        </p>
+        <p>
+            <strong>Language:</strong> {searchResult._source.language}
+        </p>
+        <p>
+            <strong>ShortTitle:</strong> {searchResult._source.shortTitle}
+        </p>
+        <p>
+            <strong>Url:</strong> {searchResult._source.url}
+        </p>
+        <p>
+            <strong>archiveLocation:</strong> {searchResult._source.archiveLocation}
+        </p>
+
+
+        <strong>collections:</strong>
+        <f:if condition="{searchResult._source.collections}">
+            <f:then>
+                <ul>
+                    <f:for each="{searchResult._source.collections}" as="collection">
+                        <li>
+                                {collection}
+                        </li>
+                    </f:for>
+                </ul>
+            </f:then>
+            <f:else>
+                <p>Keine collections vorhanden.</p>
+            </f:else>
+        </f:if>
+
+        <strong>relations:</strong>
+        <f:if condition="{searchResult._source.relations}">
+            <f:then>
+                <ul>
+                    <f:for each="{searchResult._source.relations}" as="relation" key="index">
+                        <li>
+                            {index}:
+                            <f:if condition="{relation.0}">
+                                <f:then>
+                                    <ul>
+                                        <f:for each="{relation}" as="subRelation">
+                                            <li>{subRelation}</li>
+                                        </f:for>
+                                    </ul>
+                                </f:then>
+                                <f:else>
+                                    {relation}
+                                </f:else>
+                            </f:if>
+                        </li>
+                    </f:for>
+                </ul>
+
+
+            </f:then>
+            <f:else>
+                <p>Keine relations vorhanden.</p>
+            </f:else>
+        </f:if>
+
+       </f:comment>
+
+    </div>
+</div>
+</div>
+</main>
