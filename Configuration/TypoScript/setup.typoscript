@@ -42,7 +42,7 @@ plugin.tx_lisztcommon_searchlisting {
         defaultFilterSize = 10
         # sort results if non fulltextsearch is processed (if not sorted by relevance)
         defaultSortBy = tx_lisztbibliography_year
-        defaultSortDirection = asc
+        defaultSortDirection = desc
         # maxSize is the number of items loaded and hidden for "display more" button
         # sortByKey is an option to sort the filter items, possible values are: slub (for slub-style sorting in viewhelper) or elastic (for sort in elastic aggs options)
         # the filter fields
