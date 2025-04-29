@@ -84,6 +84,15 @@
 			<trans-unit id="itemType_encyclopediaArticle" >
 				<source>Enzyklopädieartikel</source>
 			</trans-unit>
+			<trans-unit id="sort_date_desc">
+				<source>Datum absteigend</source>
+			</trans-unit>
+			<trans-unit id="sort_date_asc">
+				<source>Datum aufsteigend</source>
+			</trans-unit>
+			<trans-unit id="sort_relevance">
+				<source>Relevanz</source>
+			</trans-unit>
         </body>
     </file>
 </xliff>
