@@ -3,25 +3,6 @@
 ######################
 #<INCLUDE_TYPOSCRIPT: source="FILE:EXT:liszt_common/Configuration/TypoScript/setup.typoscript">
 
-/*lib.contentElement {
-    #layoutRootPaths {
-        #200 = EXT:liszt_bibliography:Resources/Private/Layouts
-    #}
-    #partialRootPaths {
-        #200 = EXT:liszt_bibliography:Resources/Private/Partial
-    #}
-    templateRootPaths {
-        200 = EXT:liszt_bibliography/Resources/Private/Templates
-    }
-}*/
-
-/*tt_content {
-    lisztbibliography_listing =< lib.contentElement
-    lisztbibliography_listing {
-        templateName = BibliographyListing
-    }
-}*/
-
 # page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
 
 
@@ -44,7 +25,31 @@ plugin.tx_lisztcommon_searchlisting {
         defaultFilterSize = 10
         # sort results if non fulltextsearch is processed (if not sorted by relevance)
         defaultSortBy = tx_lisztbibliography_year
-        defaultSortDirection = asc
+        defaultSortDirection = desc
+        sortings {
+          0 {
+            label = sort_date_desc
+            fields {
+              tx_lisztbibliography_year = desc
+              }
+            default = true
+          }
+          1 {
+          label = sort_date_asc
+          fields {
+            tx_lisztbibliography_year = asc
+            }
+          }
+          2 {
+          label = sort_relevance
+          fields {
+            _score = desc
+            tx_lisztbibliography_year = desc
+            }
+          fulltext = true
+          defaultFulltext = true
+          }
+        }
         # maxSize is the number of items loaded and hidden for "display more" button
         # sortByKey is an option to sort the filter items, possible values are: slub (for slub-style sorting in viewhelper) or elastic (for sort in elastic aggs options)
         # the filter fields
@@ -108,3 +113,22 @@ plugin.tx_lisztcommon_searchdetails {
       detailTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/Details.html
   }
 }
+
+/*lib.contentElement {
+#layoutRootPaths {
+#200 = EXT:liszt_bibliography:Resources/Private/Layouts
+#}
+#partialRootPaths {
+#200 = EXT:liszt_bibliography:Resources/Private/Partial
+#}
+templateRootPaths {
+200 = EXT:liszt_bibliography/Resources/Private/Templates
+}
+}*/
+
+/*tt_content {
+lisztbibliography_listing =< lib.contentElement
+lisztbibliography_listing {
+templateName = BibliographyListing
+}
+}*/
