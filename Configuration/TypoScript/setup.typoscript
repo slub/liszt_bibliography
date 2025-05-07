@@ -64,9 +64,8 @@ plugin.tx_lisztcommon_searchlisting {
             type = nested
             key = fullName
             select = multi
-            maxSize = 100
             size = 8
-            sortByKey = slub
+            maxSize = all
           }
           2 {
             field = tx_lisztbibliography_editors
@@ -102,6 +101,10 @@ plugin.tx_lisztcommon_searchlisting {
     }
   }
 }
+
+
+//same settings for htmxfilters Plugin as for searchlisting Plugin
+plugin.tx_lisztcommon_htmxfilters.settings < plugin.tx_lisztcommon_searchlisting.settings
 
 # settings for search detail Page in liszt_common
 plugin.tx_lisztcommon_searchdetails {
