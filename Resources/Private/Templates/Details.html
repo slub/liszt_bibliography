@@ -68,8 +68,6 @@
                     </f:if>
                 </dd>
             </div>
-            <f:debug>{_all}</f:debug>
-            <f:comment>ToDo: translate keys like "Bd." oder "Hrsg." in viewhelper</f:comment>
             <f:if condition="{searchResult._source.itemType} == 'book' || {searchResult._source.itemType} == 'printedMusic'">
                 <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:published', default: 'published')}" values="{place:searchResult._source.place, date:searchResult._source.date}" />
             </f:if>
