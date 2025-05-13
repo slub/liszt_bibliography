@@ -420,7 +420,7 @@ class BibEntryConfig
         return [
             self::circumfix(self::SERIES, 'in: ', ', '),
             self::postfix(self::SERIESNUMBER, ', '),
-            self::postfix(self::VOLUME, 'Bd. '),
+            self::prefix(self::VOLUME, 'Bd. '),
         ];
     }
 
