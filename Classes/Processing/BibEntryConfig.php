@@ -190,6 +190,27 @@ class BibEntryConfig
         'conditionRelation' => 'neq',
     ];
 
+    const SERIES = [
+        'field' => 'series',
+        'conditionField' => 'series',
+        'conditionValue' => '',
+        'conditionRelation' => 'neq',
+    ];
+
+    const SERIESNUMBER = [
+        'field' => 'seriesNumber',
+        'conditionField' => 'seriesNumber',
+        'conditionValue' => '',
+        'conditionRelation' => 'neq',
+    ];
+
+    const ENCYCLOPEDIATITLE = [
+        'field' => 'encyclopediaTitle',
+        'conditionField' => 'encyclopediaTitle',
+        'conditionValue' => '',
+        'conditionRelation' => 'neq',
+    ];
+
     // Alternatively, it would be possible to solve this by 'copy_to' the existing fields into the 'fulltext' field
     const SEARCHABLE_FIELDS = [
         [
@@ -394,11 +415,32 @@ class BibEntryConfig
         ];
     }
 
+    public static function getPrintedMusicFooter(): array
+    {
+        return [
+            self::circumfix(self::SERIES, 'in: ', ', '),
+            self::postfix(self::SERIESNUMBER, ', '),
+            self::postfix(self::VOLUME, 'Bd. '),
+        ];
+    }
+
     public static function getThesisFooter(): array
     {
         return [
             self::postfix(self::UNIVERSITY, ' '),
             self::DATE
+        ];
+    }
+
+    public static function getEncyclopediaArticleFooter(): array
+    {
+        return [
+            self::circumfix(self::ENCYCLOPEDIATITLE, 'in: ', ', '),
+            self::circumfix(self::VOLUME, 'Bd. ', ', '),
+            self::circumfix(self::EDITOR, 'hg. von ', ', '),
+            self::postfix(self::PLACE, ' '),
+            self::postfix(self::DATE, ', '),
+            self::PAGES
         ];
     }
 
