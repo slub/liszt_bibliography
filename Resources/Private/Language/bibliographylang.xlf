@@ -60,6 +60,9 @@
 			<trans-unit id="publicationTitle" >
 				<source>Journaltitel</source>
 			</trans-unit>
+			<trans-unit id="volume_abbreviation" >
+				<source>Band</source>
+			</trans-unit>
 			<trans-unit id="itemType_book" >
 				<source>Buch</source>
 			</trans-unit>

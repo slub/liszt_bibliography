@@ -74,8 +74,12 @@ class BibEntryProcessor extends IndexProcessor
                 $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
                 break;
             case 'printedMusic':
-                // @Matthias: ToDo: special Footer for printedMusic? Default case in switch statement?
-                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
+                // @Matthias: ToDo: please check the following 2 footers
+                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getPrintedMusicFooter());
+                break;
+            case 'encyclopediaArticle':
+                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getEncyclopediaArticleFooter());
+                break;
         }
 
         $bibliographyItem[self::SEARCHABLE_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
@@ -109,13 +113,15 @@ class BibEntryProcessor extends IndexProcessor
         $collectedFields = Collection::wrap($fieldConfig)
             ->map(function($field) use ($bibliographyItem) {
                 return $this->buildListingEntry($field, $bibliographyItem);
-            });
+            })
+            ->filter(); // filter out null values
+
         if (is_array($collectedFields->get(0))) {
             return $collectedFields->get(0);
         }
-        return $collectedFields->
-            join('')->
-            trim();
+
+        $result = $collectedFields->join('')->trim();
+        return $result->replaceMatches('/,\s*$/', '');  // remove trailing commas
     }
 
 
