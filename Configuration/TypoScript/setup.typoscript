@@ -73,8 +73,7 @@ plugin.tx_lisztcommon_searchlisting {
             key = fullName
             select = multi
             size = 8
-            maxSize = 100
-            sortByKey = slub
+            maxSize = all
           }
           3 {
             field = tx_lisztbibliography_year
