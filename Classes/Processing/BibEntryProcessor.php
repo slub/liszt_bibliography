@@ -27,6 +27,9 @@ class BibEntryProcessor extends IndexProcessor
     const YEAR_FIELD = 'tx_lisztbibliography_year';
     const FULLNAME_KEY = 'fullName';
 
+    const ORIGINAL_ITEM_TYPE = 'originalItemType'; // original itemType from Zotero for separate printedMusic in Template
+
+
     public function __construct(
         // Note the logLevel setting in the Extension Configuration
         private readonly LoggerInterface $logger
@@ -48,7 +51,11 @@ class BibEntryProcessor extends IndexProcessor
         }
 
         $key = $bibliographyItem['key'];
-        $bibliographyItem['itemType'] = $this->calculateItemType($bibliographyItem, $collectionToItemTypeMap);
+        $itemTypeResult = $this->calculateItemType($bibliographyItem, $collectionToItemTypeMap);
+        $bibliographyItem['itemType'] = $itemTypeResult['itemType'];
+        if ($itemTypeResult['originalItemType'] !== null) {
+            $bibliographyItem[self::ORIGINAL_ITEM_TYPE] = $itemTypeResult['originalItemType'];
+        }
         $bibliographyItem['localizedCitations'] = [];
         foreach ($localizedCitations as $locale => $localizedCitation) {
             $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
@@ -92,18 +99,30 @@ class BibEntryProcessor extends IndexProcessor
         return $bibliographyItem;
     }
 
+
     protected function calculateItemType(
         array $bibliographyItem,
         array $collectionToItemTypeMap
-    ): string {
+    ): array {
+        $originalItemType = $bibliographyItem['itemType'];
+
         foreach ($bibliographyItem['collections'] as $itemCollection) {
             foreach ($collectionToItemTypeMap as $mapCollection => $itemType) {
                 if ($itemCollection == $mapCollection) {
-                    return $itemType;
+                    // Return both new itemType and original itemType
+                    return [
+                        'itemType' => $itemType,
+                        'originalItemType' => $originalItemType
+                    ];
                 }
             }
         }
-        return $bibliographyItem['itemType'];
+
+        // No mapping found, return only itemType
+        return [
+            'itemType' => $originalItemType,
+            'originalItemType' => null
+        ];
     }
 
     protected function buildListingField(

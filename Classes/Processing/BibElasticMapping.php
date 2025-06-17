@@ -17,13 +17,13 @@ class BibElasticMapping
                     'properties' => [
                         'itemType' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'version' => [ 'type' => 'long' ],
-                        'title' => [ 'type' => 'text'],
+                        'title' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'shortTitle' => [ 'type' => 'text'],
                         'university' => [ 'type' => 'text'],
                         'bookTitle' => [ 'type' => 'text'],
                         'series' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'seriesNumber' => [ 'type' => 'text'],
-                        'pages' => [ 'type' => 'text'],
+                        'pages' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'volume' => [ 'type' => 'text'],
                         'publicationTitle' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'language' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
@@ -97,6 +97,7 @@ class BibElasticMapping
                             ]
                         ],
                         BibEntryProcessor::YEAR_FIELD => [ 'type' => 'short' ],
+                        BibEntryProcessor::ORIGINAL_ITEM_TYPE => [ 'type' => 'text'],
                     ]
                 ]
             ]
