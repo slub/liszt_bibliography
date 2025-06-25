@@ -65,7 +65,7 @@ plugin.tx_lisztcommon_searchlisting {
             key = fullName
             select = multi
             size = 8
-            maxSize = all
+            maxSize = 30
           }
           2 {
             field = tx_lisztbibliography_editors
@@ -73,7 +73,7 @@ plugin.tx_lisztcommon_searchlisting {
             key = fullName
             select = multi
             size = 8
-            maxSize = all
+            maxSize = 30
           }
           3 {
             field = tx_lisztbibliography_year
@@ -86,14 +86,14 @@ plugin.tx_lisztcommon_searchlisting {
             type = keyword
             select = multi
             size = 5
-            maxSize = 40
+            maxSize = 30
           }
           5 {
             field = publicationTitle
             type = terms
             select = multi
-            size = 5
-            maxSize = 80
+            size = 6
+            maxSize = 30
           }
         }
       }
