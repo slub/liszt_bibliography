@@ -7,7 +7,6 @@
     xmlns:F="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
     data-namespace-typo3-fluid="true">
 <f:variable name="languageFilePath">LLL:EXT:{settings.extensionName}/Resources/Private/Language/{settings.languageFile}.xlf</f:variable>
-
 <f:render partial="DetailBreadcrumb" arguments="{_all}" />
 
 <main role="main" id="page-content">
@@ -21,6 +20,16 @@
         <span class="searchdetail-itemtype-title">{f:translate(key: '{languageFilePath}:itemType_{searchResult._source.itemType}', default: '{searchResult._source.itemType}')}</span>
         </h3>
     </div>
+
+
+
+    <f:if condition="{searchContext.navigation}">
+        <f:render partial="DetailPageNavigation" arguments="{detailPageId: detailPageId, searchContext: searchContext, searchPageId: searchPageId }" />
+    </f:if>
+
+
+
+
 </aside>
 <div class="content grid-colspan-md-2">
     <div class="frame">
@@ -119,3 +128,5 @@
 </div>
 </div>
 </main>
+<f:debug>{_all}</f:debug>
+

@@ -31,6 +31,7 @@ plugin.tx_lisztcommon_searchlisting {
             label = sort_date_desc
             fields {
               tx_lisztbibliography_year = desc
+              dateAdded = desc
               }
             default = true
           }
@@ -38,14 +39,16 @@ plugin.tx_lisztcommon_searchlisting {
           label = sort_date_asc
           fields {
             tx_lisztbibliography_year = asc
-            }
+            dateAdded = asc
+          }
           }
           2 {
           label = sort_relevance
           fields {
             _score = desc
             tx_lisztbibliography_year = desc
-            }
+            dateAdded = desc
+          }
           fulltext = true
           defaultFulltext = true
           }
@@ -113,6 +116,8 @@ plugin.tx_lisztcommon_searchdetails {
       extensionName = liszt_bibliography
       # the template path to detail view of liszt_common search controller detail action
       detailTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/Details.html
+      # we need entityTypes for query generation on detail pages navigation
+     entityTypes < plugin.tx_lisztcommon_searchlisting.settings.entityTypes
   }
 }
 
