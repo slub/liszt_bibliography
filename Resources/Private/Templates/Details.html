@@ -37,7 +37,7 @@
                     <f:if condition="{searchResult._source.creators}">
                         <f:variable name="editorNames" value="" />
                         <f:then>
-                            <ul>
+                            <ul class="no-list-style">
                                 <f:for each="{searchResult._source.creators}" as="creator">
                                     <f:if condition="({searchResult._source.itemType} == 'journalArticle' || {searchResult._source.itemType} == 'bookSection' || {searchResult._source.itemType} == 'encyclopediaArticle') && {creator.creatorType} == 'editor'">
                                         <f:then>
