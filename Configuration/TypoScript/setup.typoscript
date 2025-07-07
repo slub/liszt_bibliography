@@ -8,6 +8,11 @@
 
 # settings for searchResults in liszt_common
 plugin.tx_lisztcommon_searchlisting {
+  view {
+    partialRootPaths {
+      30 = EXT:liszt_bibliography/Resources/Private/Partials/
+      }
+    }
   settings {
     entityTypes {
       1 {

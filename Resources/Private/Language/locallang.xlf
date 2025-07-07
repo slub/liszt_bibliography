@@ -12,6 +12,15 @@
             <trans-unit id="bibliography" resname="bibliography">
                 <source>Literatur</source>
             </trans-unit>
+			<trans-unit id="edited_by_label">
+				<source>herausgegeben von</source>
+			</trans-unit>
+			<trans-unit id="volume_label">
+				<source>Bd.</source>
+			</trans-unit>
+			<trans-unit id="issue_label">
+				<source>H.</source>
+			</trans-unit>
         </body>
     </file>
 </xliff>
