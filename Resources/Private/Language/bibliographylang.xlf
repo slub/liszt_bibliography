@@ -39,6 +39,9 @@
 			<trans-unit id="publishedIn" >
 				<source>Erschienen in</source>
 			</trans-unit>
+			<trans-unit id="publishedInShort" >
+				<source>in</source>
+			</trans-unit>
 			<trans-unit id="author" >
 				<source>Verfasser:in</source>
 			</trans-unit>

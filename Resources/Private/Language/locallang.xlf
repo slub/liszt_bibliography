@@ -21,6 +21,9 @@
 			<trans-unit id="issue_label">
 				<source>H.</source>
 			</trans-unit>
+			<trans-unit id="publishedInShort" >
+				<source>in</source>
+			</trans-unit>
         </body>
     </file>
 </xliff>
