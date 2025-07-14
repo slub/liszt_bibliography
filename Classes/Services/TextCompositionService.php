@@ -8,7 +8,8 @@ namespace Slub\LisztBibliography\Services;
 class TextCompositionService
 {
     /**
-     * Formats an array of values into a comma-separated string with prefixes and suffixes
+     * Formats a keyed array of values into a comma-separated string with prefixes and suffixes
+     * prefixes and suffixes are identified by their keys, no comma rules may be given
      *
      * @param array $values Array of values to format
      * @return string Formatted string with comma separation, prefix and suffix
