@@ -4,6 +4,8 @@
       xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
       xmlns:i="http://typo3.org/ns/Quellenform/Iconpack/ViewHelpers" xmlns:
       data-namespace-typo3-fluid="true">
+<small class="text-muted">Position: {navigationBase.startPosition + iteration.index + 1}/{navigationBase.totalResults}</small>
+
 <article class="searchresults-item ">
     <f:link.action
         action="details"
@@ -11,6 +13,7 @@
         pluginName="SearchDetails"
         pageUid="{detailPageId}"
         arguments="{documentId: hit._id}"
+        additionalAttributes="{onclick: 'return detailViewWithPaging(this, event);', data-navigation-context: '{hit._navigationContext}'}"
         class="searchresults-item-detail-link prefetch-link" >
         <header>
             <div class="searchresults-item-label"  style="view-transition-name: detail-sub-{hit._id};">
