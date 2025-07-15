@@ -14,7 +14,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
- * @covers Slub\LisztBibliography\Controller\BibliographyController
+ * @covers Slub\LisztBibliography\Processing\BibEntryProcessor
  */
 final class BibEntryProcessorTest extends UnitTestCase
 {

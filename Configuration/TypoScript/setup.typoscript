@@ -8,6 +8,11 @@
 
 # settings for searchResults in liszt_common
 plugin.tx_lisztcommon_searchlisting {
+  view {
+    partialRootPaths {
+      30 = EXT:liszt_bibliography/Resources/Private/Partials/
+      }
+    }
   settings {
     entityTypes {
       1 {
@@ -113,8 +118,11 @@ plugin.tx_lisztcommon_searchdetails {
       extensionName = liszt_bibliography
       # the template path to detail view of liszt_common search controller detail action
       detailTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/Details.html
+      detailHeaderTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/DetailsHeader.html
   }
 }
+plugin.tx_lisztcommon_searchdetailsheader.settings < plugin.tx_lisztcommon_searchdetails.settings
+
 
 /*lib.contentElement {
 #layoutRootPaths {

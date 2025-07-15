@@ -1,0 +1,39 @@
+{namespace lc=Slub\LisztCommon\ViewHelpers}
+{namespace lb=Slub\LisztBibliography\ViewHelpers}
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true"
+      xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:i="http://typo3.org/ns/Quellenform/Iconpack/ViewHelpers" xmlns:
+      data-namespace-typo3-fluid="true">
+<article class="searchresults-item ">
+    <f:link.action
+        action="details"
+        controller="Search"
+        pluginName="SearchDetails"
+        pageUid="{detailPageId}"
+        arguments="{documentId: hit._id}"
+        class="searchresults-item-detail-link prefetch-link" >
+        <header>
+            <div class="searchresults-item-label"  style="view-transition-name: detail-sub-{hit._id};">
+                {lb:searchResultItemHeader(creators: hit._source.creators)}
+            </div>
+            <div class="searchresults-item-title" style="view-transition-name: detail-headline-{hit._id};">
+                <div class="searchresults-item-icon"><i:icon iconfig="{lc:ItemTypeIconName(iconPackKey: 'lziconsr', itemType: hit._source.itemType)}" preferredRenderTypes="svgSprite" additionalAttributes="{aria-hidden:'true'}" /></div>
+                <h3>
+                    {hit._source.title}
+                </h3>
+            </div>
+        </header>
+        <div class="searchresults-item-details">
+            <f:variable name="publishedInText" value="{lb:publishedInText(values: hit._source)}" />
+            <f:if condition="{publishedInText}">
+                <f:then>
+                    {f:translate(key: 'publishedInShort', extensionName: 'liszt_bibliography', default: 'in')}: {publishedInText}
+                </f:then>
+                <f:else>
+                    {hit._source.place} {hit._source.date}
+                </f:else>
+            </f:if>
+        </div>
+    </f:link.action>
+</article>
+</html>

@@ -1,18 +1,13 @@
-
 {namespace lc=Slub\LisztCommon\ViewHelpers}
 <html
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
     xmlns:i="http://typo3.org/ns/Quellenform/Iconpack/ViewHelpers"
-    xmlns:lc="http://typo3.org/ns/Quellenform/LisztCommon/ViewHelpers"
-    xmlns:F="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:lb="http://typo3.org/ns/Slub/LisztBibliography/ViewHelpers"
     data-namespace-typo3-fluid="true">
 <f:variable name="languageFilePath">LLL:EXT:{settings.extensionName}/Resources/Private/Language/{settings.languageFile}.xlf</f:variable>
-
 <f:render partial="DetailBreadcrumb" arguments="{_all}" />
-
 <main role="main" id="page-content">
     <div class="container-xl sidebar-left grid grid-3col-md searchdetail">
-
 
 <aside class="sidebar">
     <div class="frame frame-small-mb">
@@ -35,30 +30,21 @@
                 <dt>{f:translate(key: '{languageFilePath}:tx_lisztbibliography_creators', default: 'tx_lisztbibliography_creators')}</dt>
                 <dd>
                     <f:if condition="{searchResult._source.creators}">
-                        <f:variable name="editorNames" value="" />
                         <f:then>
                             <ul class="no-list-style">
                                 <f:for each="{searchResult._source.creators}" as="creator">
-                                    <f:if condition="({searchResult._source.itemType} == 'journalArticle' || {searchResult._source.itemType} == 'bookSection' || {searchResult._source.itemType} == 'encyclopediaArticle') && {creator.creatorType} == 'editor'">
-                                        <f:then>
-                                           <f:comment>Append current editor name to the comma-separated list for later usage in CommaSeparatedListElement</f:comment>
-                                            <f:variable name="editorNames" value="{editorNames}{f:if(condition: editorNames, then: ', ')}{f:if(condition: creator.firstName, then: '{creator.firstName} ')}{creator.lastName}" />
-                                        </f:then>
-                                        <f:else>
-                                            <li>
-                                                <f:if condition="{creator.firstName}">
-                                                    {creator.firstName}
-                                                </f:if>
-                                                <f:if condition="{creator.lastName}">
-                                                    {creator.lastName}
-                                                </f:if>
-                                                <f:if condition="{creator.creatorType}">
-                                                    (<span>{f:translate(key: '{languageFilePath}:{creator.creatorType}', default: '{creator.creatorType}')}</span>)
-                                                </f:if>
-                                            </li>
-                                        </f:else>
-
-
+                                    <f:if condition="{creator.creatorType} != 'editor' || ({searchResult._source.itemType} != 'journalArticle' && {searchResult._source.itemType} != 'bookSection' && {searchResult._source.itemType} != 'encyclopediaArticle')">
+                                        <li>
+                                            <f:if condition="{creator.firstName}">
+                                                {creator.firstName}
+                                            </f:if>
+                                            <f:if condition="{creator.lastName}">
+                                                {creator.lastName}
+                                            </f:if>
+                                            <f:if condition="{creator.creatorType}">
+                                                (<span>{f:translate(key: '{languageFilePath}:{creator.creatorType}', default: '{creator.creatorType}')}</span>)
+                                            </f:if>
+                                        </li>
                                     </f:if>
                                 </f:for>
                             </ul>
@@ -69,41 +55,31 @@
                     </f:if>
                 </dd>
             </div>
-            <f:if condition="{searchResult._source.itemType} == 'book' || {searchResult._source.itemType} == 'printedMusic'">
-                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:published', default: 'published')}" values="{place:searchResult._source.place, date:searchResult._source.date}" />
-            </f:if>
-
-            <f:if condition="{searchResult._source.itemType} == 'book'">
-                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{series:searchResult._source.series, seriesNumber:searchResult._source.seriesNumber}" />
-            </f:if>
-
-            <f:if condition="{searchResult._source.itemType} == bookSection">
-                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{bookTitle:searchResult._source.bookTitle,'#Bd. ':searchResult._source.volume,'#herausgegeben von ':editorNames, place:searchResult._source.place, date:searchResult._source.date, pages:searchResult._source.pages}" />
-            </f:if>
-
-            <f:if condition="{searchResult._source.itemType} == journalArticle">
-                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{publicationTitle:searchResult._source.publicationTitle, '#Bd. ':searchResult._source.volume,'#herausgegeben von ':editorNames, date:searchResult._source.date, pages:searchResult._source.pages}" />
-            </f:if>
-
-            <f:if condition="{searchResult._source.itemType} == printedMusic">
-
-                <f:if condition="{searchResult._source.originalItemType} == journalArticle">
-                    <f:then>
-                        <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{publicationTitle:searchResult._source.publicationTitle, '#Bd. ':searchResult._source.volume,  '#H. ':searchResult._source.issue, date:searchResult._source.date, pages:searchResult._source.pages}" />
-                    </f:then>
-                    <f:else>
-                        <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{series:searchResult._source.series, seriesNumber:searchResult._source.seriesNumber,  '#Bd. ':searchResult._source.volume}" />
-                    </f:else>
+            <f:if condition="{searchResult._source.itemType} == 'book' || {searchResult._source.itemType} == 'printedMusic' || {searchResult._source.itemType} == thesis">
+                <f:variable name="publishedText" value="{lb:publishedText(values: searchResult._source)}" />
+                <f:if condition="{publishedText}">
+                    <div>
+                        <dt>{f:translate(key: '{languageFilePath}:published', default: 'published')}</dt>
+                        <dd>{publishedText}</dd>
+                    </div>
                 </f:if>
             </f:if>
 
-            <f:if condition="{searchResult._source.itemType} == thesis">
-                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:published', default: 'published')}" values="{university:searchResult._source.university, place:searchResult._source.place, date:searchResult._source.date}" />
-                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:pages', default: 'pages')}" values="{pages:searchResult._source.pages}" />
+            <f:if condition="{searchResult._source.itemType} != thesis">
+                <f:variable name="publishedInText" value="{lb:publishedInText(values: searchResult._source)}" />
+                <f:if condition="{publishedInText}">
+                    <div>
+                        <dt>{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}</dt>
+                        <dd>{publishedInText}</dd>
+                    </div>
+                </f:if>
             </f:if>
 
-            <f:if condition="{searchResult._source.itemType} == encyclopediaArticle">
-                <lc:CommaSeparatedListElement label="{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}" values="{encyclopediaTitle:searchResult._source.encyclopediaTitle, '#Bd. ':searchResult._source.volume,'#herausgegeben von ':editorNames, place:searchResult._source.place, date:searchResult._source.date, pages:searchResult._source.pages}" />
+            <f:if condition="{searchResult._source.itemType} == thesis && {searchResult._source.pages}">
+                <div>
+                    <dt>{f:translate(key: '{languageFilePath}:pages', default: 'pages')}</dt>
+                    <dd>{searchResult._source.pages}</dd>
+                </div>
             </f:if>
 
             <div>
