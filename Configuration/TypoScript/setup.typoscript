@@ -8,6 +8,11 @@
 
 # settings for searchResults in liszt_common
 plugin.tx_lisztcommon_searchlisting {
+  view {
+    partialRootPaths {
+      30 = EXT:liszt_bibliography/Resources/Private/Partials/
+      }
+    }
   settings {
     entityTypes {
       1 {
@@ -68,7 +73,7 @@ plugin.tx_lisztcommon_searchlisting {
             key = fullName
             select = multi
             size = 8
-            maxSize = all
+            maxSize = 30
           }
           2 {
             field = tx_lisztbibliography_editors
@@ -76,7 +81,7 @@ plugin.tx_lisztcommon_searchlisting {
             key = fullName
             select = multi
             size = 8
-            maxSize = all
+            maxSize = 30
           }
           3 {
             field = tx_lisztbibliography_year
@@ -89,14 +94,14 @@ plugin.tx_lisztcommon_searchlisting {
             type = keyword
             select = multi
             size = 5
-            maxSize = 40
+            maxSize = 30
           }
           5 {
             field = publicationTitle
             type = terms
             select = multi
-            size = 5
-            maxSize = 80
+            size = 6
+            maxSize = 30
           }
         }
       }
@@ -116,10 +121,13 @@ plugin.tx_lisztcommon_searchdetails {
       extensionName = liszt_bibliography
       # the template path to detail view of liszt_common search controller detail action
       detailTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/Details.html
+      detailHeaderTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/DetailsHeader.html
       # we need entityTypes for query generation on detail pages navigation
      entityTypes < plugin.tx_lisztcommon_searchlisting.settings.entityTypes
   }
 }
+plugin.tx_lisztcommon_searchdetailsheader.settings < plugin.tx_lisztcommon_searchdetails.settings
+
 
 /*lib.contentElement {
 #layoutRootPaths {
