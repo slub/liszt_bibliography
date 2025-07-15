@@ -75,7 +75,7 @@ class PublishedInTextViewHelper extends AbstractViewHelper
                 'pages' => $values['pages'] ?? ''
             ],
             'printedMusic' => $this->getPrintedMusicValues($values),
-            default => ['place' => $values['place'] ?? '', 'date' => $values['date'] ?? ''],
+            default => [],
         };
 
         $formattedValues = $this->textCompositionService->formatCommaSeparatedValues($composeValues, $prefixes, $suffixes, $noCommaRules);
