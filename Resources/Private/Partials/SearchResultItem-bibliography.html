@@ -25,7 +25,7 @@
         </header>
         <div class="searchresults-item-details">
             <f:variable name="publishedInText" value="{lb:publishedInText(values: hit._source)}" />
-            <f:if condition="{publishedInText} && {hit._source.itemType} != 'boook' ">
+            <f:if condition="{publishedInText} && {hit._source.itemType} != 'book' ">
                 <f:then>
                     {f:translate(key: 'publishedInShort', extensionName: 'liszt_bibliography', default: 'in')}: {publishedInText}
                 </f:then>
