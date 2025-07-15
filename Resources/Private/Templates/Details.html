@@ -65,13 +65,21 @@
                 </f:if>
             </f:if>
 
-            <f:if condition="{searchResult._source.itemType} != thesis">
-                <f:variable name="publishedInText" value="{lb:publishedInText(values: searchResult._source)}" />
-                <f:if condition="{publishedInText}">
-                    <div>
-                        <dt>{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}</dt>
-                        <dd>{publishedInText}</dd>
-                    </div>
+            <f:variable name="publishedInText" value="{lb:publishedInText(values: searchResult._source)}" />
+            <f:if condition="{publishedInText}">
+                <f:if condition="{searchResult._source.itemType} == book">
+                    <f:then>
+                            <div>
+                                <dt>{f:translate(key: '{languageFilePath}:series', default: 'series')}</dt>
+                                <dd>{publishedInText}</dd>
+                            </div>
+                    </f:then>
+                    <f:else>
+                        <div>
+                            <dt>{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}</dt>
+                            <dd>{publishedInText}</dd>
+                        </div>
+                    </f:else>
                 </f:if>
             </f:if>
 

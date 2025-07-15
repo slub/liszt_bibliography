@@ -44,8 +44,13 @@ class PublishedInTextViewHelper extends AbstractViewHelper
             'liszt_bibliography'
         ) ?? 'H.';
 
+        $seriesNumberLabel = LocalizationUtility::translate(
+            'seriesNumber_label',
+            'liszt_bibliography'
+        ) ?? 'Nr.';
+
         $values = $this->arguments['values'];
-        $prefixes = ['editorNames' => $editedByLabel.' ', 'volume' => $volumeLabel.' ', 'issue' => $issueLabel.' '];
+        $prefixes = ['editorNames' => $editedByLabel.' ', 'volume' => $volumeLabel.' ', 'issue' => $issueLabel.' ', 'seriesNumber' => $seriesNumberLabel.' '];
         $suffixes = [];
         $noCommaRules = [['place','date']];
 
