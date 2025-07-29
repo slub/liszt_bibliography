@@ -13,8 +13,8 @@
         pluginName="SearchDetails"
         pageUid="{detailPageId}"
         arguments="{documentId: hit._id}"
-        additionalAttributes="{onclick: 'return detailViewWithPaging(this, event);', data-navigation-context: '{hit._navigationContext}'}"
-        class="searchresults-item-detail-link prefetch-link" >
+        additionalAttributes="{onclick: 'return detailViewNavigation(this, event);', data-navigation-context: '{hit._navigationContext}'}"
+        class="searchresults-item-detail-link" >
         <header>
             <div class="searchresults-item-label"  style="view-transition-name: detail-sub-{hit._id};">
                 {lb:searchResultItemHeader(creators: hit._source.creators)}
