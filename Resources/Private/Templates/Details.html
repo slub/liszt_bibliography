@@ -6,7 +6,6 @@
     data-namespace-typo3-fluid="true">
 <f:variable name="languageFilePath">LLL:EXT:{settings.extensionName}/Resources/Private/Language/{settings.languageFile}.xlf</f:variable>
 <f:render partial="DetailBreadcrumb" arguments="{_all}" />
-<f:debug>{_all}</f:debug>
 
 <main role="main" id="page-content">
     <div class="container-xl sidebar-left grid grid-3col-md searchdetail">
@@ -18,16 +17,6 @@
         <span class="searchdetail-itemtype-title">{f:translate(key: '{languageFilePath}:itemType_{searchResult._source.itemType}', default: '{searchResult._source.itemType}')}</span>
         </h3>
     </div>
-
-
-
-    <f:if condition="{searchContext.navigation}">
-        <f:render partial="DetailPageNavigation" arguments="{detailPageId: detailPageId, searchContext: searchContext, searchPageId: searchPageId }" />
-    </f:if>
-
-
-
-
 </aside>
 <div class="content grid-colspan-md-2">
     <div class="frame">
@@ -102,6 +91,12 @@
             </div>
 
         </dl>
+
+
+        <f:if condition="{searchContext.navigation}">
+            <f:render partial="DetailPageNavigation" arguments="{detailPageId: detailPageId, searchContext: searchContext, searchPageId: searchPageId }" />
+        </f:if>
+
 
     </div>
 </div>
