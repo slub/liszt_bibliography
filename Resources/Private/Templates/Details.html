@@ -23,9 +23,7 @@
         <dl class="searchdetail-list">
             <div>
             <dt>{f:translate(key: '{languageFilePath}:title', default: 'title')}</dt>
-            <dd>
-                {searchResult._source.title}
-            </dd>
+            <dd>{searchResult._source.title}</dd>
             </div>
             <div>
                 <dt>{f:translate(key: '{languageFilePath}:tx_lisztbibliography_creators', default: 'tx_lisztbibliography_creators')}</dt>
@@ -66,13 +64,21 @@
                 </f:if>
             </f:if>
 
-            <f:if condition="{searchResult._source.itemType} != thesis">
-                <f:variable name="publishedInText" value="{lb:publishedInText(values: searchResult._source)}" />
-                <f:if condition="{publishedInText}">
-                    <div>
-                        <dt>{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}</dt>
-                        <dd>{publishedInText}</dd>
-                    </div>
+            <f:variable name="publishedInText" value="{lb:publishedInText(values: searchResult._source)}" />
+            <f:if condition="{publishedInText}">
+                <f:if condition="{searchResult._source.itemType} == book">
+                    <f:then>
+                            <div>
+                                <dt>{f:translate(key: '{languageFilePath}:series', default: 'series')}</dt>
+                                <dd>{publishedInText}</dd>
+                            </div>
+                    </f:then>
+                    <f:else>
+                        <div>
+                            <dt>{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}</dt>
+                            <dd>{publishedInText}</dd>
+                        </div>
+                    </f:else>
                 </f:if>
             </f:if>
 
@@ -85,9 +91,7 @@
 
             <div>
                 <dt>{f:translate(key: '{languageFilePath}:language', default: 'language')}</dt>
-                <dd>
-                    {searchResult._source.language}
-                </dd>
+                <dd>{searchResult._source.language}</dd>
             </div>
 
         </dl>
