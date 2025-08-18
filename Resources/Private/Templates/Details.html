@@ -6,6 +6,7 @@
     data-namespace-typo3-fluid="true">
 <f:variable name="languageFilePath">LLL:EXT:{settings.extensionName}/Resources/Private/Language/{settings.languageFile}.xlf</f:variable>
 <f:render partial="DetailBreadcrumb" arguments="{_all}" />
+
 <main role="main" id="page-content">
     <div class="container-xl sidebar-left grid grid-3col-md searchdetail">
 
@@ -95,7 +96,14 @@
 
         </dl>
 
+
+        <f:if condition="{searchContext.navigation}">
+            <f:render partial="DetailPageNavigation" arguments="{detailPageId: detailPageId, searchContext: searchContext, searchPageId: searchPageId }" />
+        </f:if>
+
+
     </div>
 </div>
 </div>
 </main>
+
