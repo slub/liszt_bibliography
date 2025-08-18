@@ -23,7 +23,6 @@ class BibEntryProcessor extends IndexProcessor
 {
     const AUTHORS_FIELD = 'tx_lisztbibliography_authors';
     const EDITORS_FIELD = 'tx_lisztbibliography_editors';
-
     const YEAR_FIELD = 'tx_lisztbibliography_year';
     const FULLNAME_KEY = 'fullName';
 
@@ -61,33 +60,6 @@ class BibEntryProcessor extends IndexProcessor
             $bibliographyItem['localizedCitations'][$locale] = $localizedCitation->get($key)['citation'];
         }
         $bibliographyItem['tei'] = $teiDataSets->get($key);
-        $bibliographyItem[self::HEADER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getAuthorHeader());
-        if ($bibliographyItem[self::HEADER_FIELD] == '') {
-            $bibliographyItem[self::HEADER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getEditorHeader());
-        }
-        $bibliographyItem[self::BODY_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBody());
-
-        switch ($bibliographyItem[self::TYPE_FIELD]) {
-            case 'book':
-                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBookFooter());
-                break;
-            case 'bookSection':
-                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getBookSectionFooter());
-                break;
-            case 'journalArticle':
-                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getArticleFooter());
-                break;
-            case 'thesis':
-                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getThesisFooter());
-                break;
-            case 'printedMusic':
-                // @Matthias: ToDo: please check the following 2 footers
-                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getPrintedMusicFooter());
-                break;
-            case 'encyclopediaArticle':
-                $bibliographyItem[self::FOOTER_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::getEncyclopediaArticleFooter());
-                break;
-        }
 
         $bibliographyItem[self::SEARCHABLE_FIELD] = $this->buildListingField($bibliographyItem, BibEntryConfig::SEARCHABLE_FIELDS);
         $bibliographyItem[self::BOOSTED_FIELD]    = $this->buildListingField($bibliographyItem, BibEntryConfig::BOOSTED_FIELDS);
@@ -209,16 +181,6 @@ class BibEntryProcessor extends IndexProcessor
                     });
             })->toArray();
 
-        /*
-        returns:
-        (
-            [0] => Array
-            ([fullName] => Illuminate\Support\Stringable Object ([value:protected] => Michael Saffle))
-
-            [1] => Array
-            ([fullName] => Illuminate\Support\Stringable Object([value:protected] => Michael Saffle)
-        )
-        */
     }
 
     protected function buildListingEntry(array $field, array $bibliographyItem): Stringable|array|null

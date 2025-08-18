@@ -28,12 +28,19 @@ plugin.tx_lisztcommon_searchlisting {
         # sort results if non fulltextsearch is processed (if not sorted by relevance)
         defaultSortBy = tx_lisztbibliography_year
         defaultSortDirection = desc
+        # IMPORTANT: key\.keyword is required as the final sort field for proper detail page navigation
+        # - Multiple documents can have identical tx_lisztbibliography_year and dateAdded values
+        # - Without a unique tiebreaker field, search_after pagination fails when navigating between detail pages
+        # - Text fields require the .keyword subfield for sorting in Elasticsearch
+        # - The backslash escapes the dot to prevent TypoScript from interpreting it as object notation
+
         sortings {
           0 {
             label = sort_date_desc
             fields {
               tx_lisztbibliography_year = desc
               dateAdded = desc
+              key\.keyword = desc
               }
             default = true
           }
@@ -42,6 +49,8 @@ plugin.tx_lisztcommon_searchlisting {
           fields {
             tx_lisztbibliography_year = asc
             dateAdded = asc
+            # Unique tiebreaker to ensure stable sorting and proper detail page navigation
+            key\.keyword = asc
           }
           }
           2 {
@@ -50,6 +59,7 @@ plugin.tx_lisztcommon_searchlisting {
             _score = desc
             tx_lisztbibliography_year = desc
             dateAdded = desc
+            key\.keyword = desc
           }
           fulltext = true
           defaultFulltext = true
