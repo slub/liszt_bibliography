@@ -44,7 +44,7 @@ class BibEntryConfig
         ],
 
     ];
-    const AUTHOR = [
+/*    const AUTHOR = [
         'compound' => [
             'fields' => [
                 [
@@ -69,105 +69,12 @@ class BibEntryConfig
             'field' => 'creators',
             'separator' => ', '
         ]
-    ];
+    ];*/
 
-    const EDITOR = [
-        'compound' => [
-            'fields' => [
-                [
-                    'field' => 'firstName',
-                    'conditionField' => 'creatorType',
-                    'conditionValue' => 'editor',
-                    'conditionRelation' => 'eq'
-                ],
-                [
-                    'field' => 'lastName',
-                    'conditionField' => 'creatorType',
-                    'conditionValue' => 'editor',
-                    'conditionRelation' => 'eq'
-                ],
-                [
-                    'field' => 'name',
-                    'conditionField' => 'creatorType',
-                    'conditionValue' => 'editor',
-                    'conditionRelation' => 'eq'
-                ]
-            ],
-            'field' => 'creators',
-            'separator' => ', '
-        ]
-    ];
 
-    const TRANSLATOR = [
-        'compound' => [
-            'fields' => [
-                [
-                    'field' => 'firstName',
-                    'conditionField' => 'creatorType',
-                    'conditionValue' => 'translator',
-                    'conditionRelation' => 'eq'
-                ],
-                [
-                    'field' => 'lastName',
-                    'conditionField' => 'creatorType',
-                    'conditionValue' => 'translator',
-                    'conditionRelation' => 'eq'
-                ],
-                [
-                    'field' => 'name',
-                    'conditionField' => 'creatorType',
-                    'conditionValue' => 'translator',
-                    'conditionRelation' => 'eq'
-                ]
-            ],
-            'field' => 'creators',
-            'separator' => ', '
-        ]
-    ];
 
     const TITLE = [ 'field' => 'title' ];
 
-    const PUBLICATION_TITLE = [
-        'field' => 'publicationTitle',
-        'conditionField' => 'publicationTitle',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
-
-    const BOOK_TITLE = [
-        'field' => 'bookTitle',
-        'conditionField' => 'bookTitle',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
-
-    const UNIVERSITY = [
-        'field' => 'university',
-        'conditionField' => 'university',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
-
-    const VOLUME = [
-        'field' => 'volume',
-        'conditionField' => 'volume',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
-
-    const ISSUE = [
-        'field' => 'issue',
-        'conditionField' => 'issue',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq'
-    ];
-
-    const PLACE = [
-        'field' => 'place',
-        'conditionField' => 'place',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
 
     const DATE = [
         'field' => 'date',
@@ -176,40 +83,8 @@ class BibEntryConfig
         'conditionRelation' => 'neq',
     ];
 
-    const PAGES = [
-        'field' => 'pages',
-        'conditionField' => 'pages',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
 
-    const NUMBER_OF_VOLUMES = [
-        'field' => 'numberOfVolumes',
-        'conditionField' => 'numberOfVolumes',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
 
-    const SERIES = [
-        'field' => 'series',
-        'conditionField' => 'series',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
-
-    const SERIESNUMBER = [
-        'field' => 'seriesNumber',
-        'conditionField' => 'seriesNumber',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
-
-    const ENCYCLOPEDIATITLE = [
-        'field' => 'encyclopediaTitle',
-        'conditionField' => 'encyclopediaTitle',
-        'conditionValue' => '',
-        'conditionRelation' => 'neq',
-    ];
 
     // Alternatively, it would be possible to solve this by 'copy_to' the existing fields into the 'fulltext' field
     const SEARCHABLE_FIELDS = [
@@ -362,87 +237,6 @@ class BibEntryConfig
         return self::REQUIRED_FIELDS;
     }
 
-
-    public static function getAuthorHeader(): array
-    {
-        return [ self::AUTHOR ];
-    }
-
-    public static function getEditorHeader(): array
-    {
-        return [ self::postfix(self::EDITOR, ' (Hg.)') ];
-    }
-
-    public static function getBody(): array
-    {
-        return [ self::TITLE ];
-    }
-
-    public static function getArticleFooter(): array
-    {
-        return [
-            self::circumfix(self::PUBLICATION_TITLE, 'in: ', ' '),
-            self::postfix(self::VOLUME, ' '),
-            self::circumfix(self::DATE, '(', '), '),
-            self::circumfix(self::ISSUE, 'Nr. ', ', '),
-            self::PAGES
-        ];
-    }
-
-    public static function getBookSectionFooter(): array
-    {
-        return [
-            self::circumfix(self::BOOK_TITLE, 'in: ', ', '),
-            self::circumfix(self::EDITOR, 'hg. von ', ', '),
-            self::circumfix(self::TRANSLATOR, 'übers. von ', ', '),
-            self::postfix(self::NUMBER_OF_VOLUMES, 'Bde., '),
-            self::circumfix(self::VOLUME, 'Bd. ', ', '),
-            self::postfix(self::PLACE, ' '),
-            self::postfix(self::DATE, ', '),
-            self::PAGES
-        ];
-    }
-
-    public static function getBookFooter(): array
-    {
-        return [
-            self::circumfix(self::EDITOR, 'hg. von ', ', '),
-            self::circumfix(self::TRANSLATOR, 'übers. von ', ', '),
-            self::postfix(self::NUMBER_OF_VOLUMES, 'Bde., '),
-            self::circumfix(self::VOLUME, 'Bd. ', ', '),
-            self::postfix(self::PLACE, ' '),
-            self::DATE
-        ];
-    }
-
-    public static function getPrintedMusicFooter(): array
-    {
-        return [
-            self::circumfix(self::SERIES, 'in: ', ', '),
-            self::postfix(self::SERIESNUMBER, ', '),
-            self::prefix(self::VOLUME, 'Bd. '),
-        ];
-    }
-
-    public static function getThesisFooter(): array
-    {
-        return [
-            self::postfix(self::UNIVERSITY, ' '),
-            self::DATE
-        ];
-    }
-
-    public static function getEncyclopediaArticleFooter(): array
-    {
-        return [
-            self::circumfix(self::ENCYCLOPEDIATITLE, 'in: ', ', '),
-            self::circumfix(self::VOLUME, 'Bd. ', ', '),
-            self::circumfix(self::EDITOR, 'hg. von ', ', '),
-            self::postfix(self::PLACE, ' '),
-            self::postfix(self::DATE, ', '),
-            self::PAGES
-        ];
-    }
 
 
     private static function prefix(array $field, string $prefix): array

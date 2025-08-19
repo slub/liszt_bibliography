@@ -210,6 +210,7 @@ final class BibEntryProcessorTest extends UnitTestCase
         $expectedWithoutAuthor = Str::of($this->editorFirstName . ' ' . $this->editorLastName . ' (Hg.)');
         $expectedWithAnonymousAuthor = Str::of($this->authorLastName);
 
+        var_dump($book);die;
         self::assertEquals($book['tx_lisztcommon_header'], $expected);
         self::assertEquals($bookSection['tx_lisztcommon_header'], $expected);
         self::assertEquals($article['tx_lisztcommon_header'], $expected);
