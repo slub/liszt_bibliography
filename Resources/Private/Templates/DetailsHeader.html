@@ -1,7 +1,15 @@
 {namespace lb=Slub\LisztBibliography\ViewHelpers}
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
 <div class="page-header-title page-header-title-detailpage">
-    <p class="page-header-subtitle"  style="view-transition-name: detail-sub-{searchResult._id};">{lb:searchResultItemHeader(creators: searchResult._source.creators)}</p>
-    <h1 style="view-transition-name: detail-headline-{searchResult._id};">{searchResult._source.title}</h1>
+    <f:if condition="{ElasticSearchServiceError} != ''">
+        <f:then>
+            <p class="page-header-subtitle"> </p>
+            <h1>Error</h1>
+        </f:then>
+        <f:else>
+            <p class="page-header-subtitle"  style="view-transition-name: detail-sub-{searchResult._id};">{lb:searchResultItemHeader(creators: searchResult._source.creators)}</p>
+            <h1 style="view-transition-name: detail-headline-{searchResult._id};">{searchResult._source.title}</h1>
+        </f:else>
+    </f:if>
 </div>
 </html>
