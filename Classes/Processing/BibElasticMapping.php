@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace Slub\LisztBibliography\Processing;
 
-// create a field "fulltext" and copy content of "tx_lisztcommon_searchable" to fulltext
+// the Extension ICU analyzer must be installed in Elasticsearch
+// field "fulltext" with ICU analyzer for improved text search
+// Supports transliteration (e.g., здравствуйте -> zdravstvujte)
+// and normalization (e.g., straße -> strasse, Kornél -> Kornel)
 
 class BibElasticMapping
 {
@@ -12,6 +15,39 @@ class BibElasticMapping
         return [
             'index' => $index,
             'body' => [
+                'settings' => [
+                    'analysis' => [
+                        'analyzer' => [
+                            'icu_fulltext_analyzer' => [
+                                'type' => 'custom',
+                                'tokenizer' => 'icu_tokenizer',
+                                'filter' => [
+                                    'icu_folding',
+                                    'icu_normalizer',
+                                    'icu_transform',
+                                    'lowercase',
+                                    'stop'
+                                ]
+                            ],
+                            'icu_search_analyzer' => [
+                                'type' => 'custom',
+                                'tokenizer' => 'icu_tokenizer',
+                                'filter' => [
+                                    'icu_folding',
+                                    'icu_normalizer',
+                                    'icu_transform',
+                                    'lowercase'
+                                ]
+                            ]
+                        ],
+                        'filter' => [
+                            'icu_transform' => [
+                                'type' => 'icu_transform',
+                                'id' => 'Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC'
+                            ]
+                        ]
+                    ]
+                ],
                 'mappings' => [
                     'dynamic' => false,
                     'properties' => [
@@ -66,7 +102,17 @@ class BibElasticMapping
                                 BibEntryProcessor::FULLNAME_KEY => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
                             ]
                         ],
-                        'fulltext' => [ 'type' => 'text' ],
+                        'fulltext' => [
+                            'type' => 'text',
+                            'analyzer' => 'icu_fulltext_analyzer',
+                            'search_analyzer' => 'icu_search_analyzer',
+                            'fields' => [
+                                'raw' => [
+                                    'type' => 'text',
+                                    'analyzer' => 'standard'
+                                ]
+                            ]
+                        ],
                         BibEntryProcessor::SEARCHABLE_FIELD => ['type' => 'text', 'copy_to' => 'fulltext'],
                         BibEntryProcessor::BOOSTED_FIELD => ['type' => 'text'],
                         BibEntryProcessor::AUTHORS_FIELD => [
