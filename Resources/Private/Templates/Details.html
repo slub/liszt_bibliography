@@ -7,7 +7,16 @@
 <f:variable name="languageFilePath">LLL:EXT:{settings.extensionName}/Resources/Private/Language/{settings.languageFile}.xlf</f:variable>
 <f:render partial="DetailBreadcrumb" arguments="{_all}" />
 <main role="main" id="page-content">
-    <div class="container-xl sidebar-left grid grid-3col-md searchdetail">
+<div class="container-xl sidebar-left grid grid-3col-md searchdetail">
+<f:if condition="{ElasticSearchServiceError} != ''">
+<f:then>
+<div class="content grid-colspan-md-2">
+    <div class="alert" role="alert">
+        {ElasticSearchServiceError}
+    </div>
+</div>
+</f:then>
+<f:else>
 <aside class="sidebar">
     <div class="frame frame-small-mb">
         <h3 class="searchdetail-itemtype">
@@ -96,15 +105,13 @@
             </div>
 
         </dl>
-
-
         <f:if condition="{searchContext.navigation}">
             <f:render partial="DetailPageNavigation" arguments="{detailPageId: detailPageId, searchContext: searchContext, searchPageId: searchPageId, detailId: detailId }" />
         </f:if>
-
-
     </div>
 </div>
+</f:else>
+</f:if>
 </div>
 </main>
 
