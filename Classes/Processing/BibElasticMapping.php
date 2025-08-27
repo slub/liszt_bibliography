@@ -26,6 +26,7 @@ class BibElasticMapping
                                     'icu_normalizer',
                                     'icu_transform',
                                     'lowercase',
+                                    'synonym_filter',
                                     'stop'
                                 ]
                             ],
@@ -36,7 +37,8 @@ class BibElasticMapping
                                     'icu_folding',
                                     'icu_normalizer',
                                     'icu_transform',
-                                    'lowercase'
+                                    'lowercase',
+                                    'synonym_filter',
                                 ]
                             ]
                         ],
@@ -44,8 +46,15 @@ class BibElasticMapping
                             'icu_transform' => [
                                 'type' => 'icu_transform',
                                 'id' => 'Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC'
+                            ],
+                            'synonym_filter' => [
+                                'type' => 'synonym',
+                                'lenient' => true,
+                                'synonyms' => [
+                                    'Liszt, Lißt, Lisst, Listz'
+                                ]
                             ]
-                        ]
+                        ],
                     ]
                 ],
                 'mappings' => [
