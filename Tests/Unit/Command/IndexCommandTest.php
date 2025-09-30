@@ -18,7 +18,7 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-// Proxy, um geschützte Methoden testbar zu machen und den ES-Client-Builder zu umgehen
+// Proxy to make protected methods testable and bypass ES client builder
 final class IndexCommandTestProxy extends IndexCommand
 {
     public function callInitialize(InputInterface $input, OutputInterface $output): void
@@ -41,15 +41,15 @@ final class IndexCommandTestProxy extends IndexCommand
         $this->collectionIds = $collectionIds;
     }
 
-    // WICHTIG: Builder im Test umgehen
+    // IMPORTANT: Bypass builder in test
     protected function getElasticClient()
     {
-        // Wenn im Test bereits injiziert, diesen verwenden
+        // If already injected in test, use this one
         if ($this->client) {
             return $this->client;
         }
 
-        // Fallback-Dummy, der von initialize() verwendet wird
+        // Fallback dummy used by initialize()
         return new class {
             public function indices()
             {
@@ -58,7 +58,7 @@ final class IndexCommandTestProxy extends IndexCommand
                     public function updateAliases(array $params): void {}
                     public function getAlias(array $params)
                     {
-                        // Liefere eine Struktur mit asArray(), wie sie vom Code erwartet wird
+                        // Return a structure with asArray() as expected by the code
                         return new class {
                             public function asArray(): array
                             {
@@ -71,7 +71,7 @@ final class IndexCommandTestProxy extends IndexCommand
             }
             public function search(array $params = [])
             {
-                // Standard: keine vorhandene Version
+                // Default: no existing version
                 return ['aggregations' => ['max_version' => ['value' => null]]];
             }
             public function bulk(array $params = [])
@@ -109,7 +109,7 @@ final class IndexCommandTest extends UnitTestCase
         $this->inputMock = $this->createMock(InputInterface::class);
         $this->outputMock = $this->createMock(OutputInterface::class);
 
-        // Minimale Extension-Konfiguration für liszt_bibliography
+        // Minimal extension configuration for liszt_bibliography
         $extConf = $this->createMock(ExtensionConfiguration::class);
         $extConf->method('get')->willReturnMap([
             ['liszt_bibliography', '', [
@@ -121,7 +121,7 @@ final class IndexCommandTest extends UnitTestCase
         ]);
         GeneralUtility::addInstance(ExtensionConfiguration::class, $extConf);
 
-        // Proxy-Command instanziieren (verwendet den Dummy-ES-Client)
+        // Instantiate proxy command (uses dummy ES client)
         $this->subject = new IndexCommandTestProxy($this->siteFinderMock, $this->loggerMock);
         $this->subject->setSleeper(static function (int $seconds): void {});
     }
@@ -161,7 +161,7 @@ final class IndexCommandTest extends UnitTestCase
 
         $this->subject->callInitialize($this->inputMock, $this->outputMock);
 
-        // Client-Dummy, dessen search() 404 wirft
+        // Client dummy whose search() throws 404
         $client404 = new class {
             public function search(array $params = [])
             {
@@ -186,7 +186,7 @@ final class IndexCommandTest extends UnitTestCase
 
         $this->subject->callInitialize($this->inputMock, $this->outputMock);
 
-        // ES-Client-Dummy für Index-Erstellung/Alias-Updates
+        // ES client dummy for index creation/alias updates
         $clientForFullSync = new class {
             public function indices()
             {
@@ -235,7 +235,7 @@ final class IndexCommandTest extends UnitTestCase
         ));
         GeneralUtility::addInstance(ZoteroApi::class, $zoteroMock);
 
-        // fullSync erwartet collectionIds; minimal [null] setzen
+        // fullSync expects collectionIds; set minimal [null]
         $this->subject->setCollectionIds(new Collection([null]));
 
         $this->expectException(Exception::class);
