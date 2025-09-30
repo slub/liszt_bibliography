@@ -21,6 +21,8 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 // Proxy to make protected methods testable and bypass ES client builder
 final class IndexCommandTestProxy extends IndexCommand
 {
+    private ?ZoteroApi $zoteroApi = null;
+
     public function callInitialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -39,6 +41,21 @@ final class IndexCommandTestProxy extends IndexCommand
     public function setCollectionIds(Collection $collectionIds): void
     {
         $this->collectionIds = $collectionIds;
+    }
+
+    // Allow tests to inject a ZoteroApi mock
+    public function setZoteroApi(ZoteroApi $api): void
+    {
+        $this->zoteroApi = $api;
+    }
+
+    // Always return injected mock if available
+    protected function getZoteroApi(): ZoteroApi
+    {
+        if ($this->zoteroApi instanceof ZoteroApi) {
+            return $this->zoteroApi;
+        }
+        return parent::getZoteroApi();
     }
 
     // IMPORTANT: Bypass builder in test
@@ -178,7 +195,7 @@ final class IndexCommandTest extends UnitTestCase
     {
         $this->inputMock->method('getOption')->willReturnMap([
             ['all', false],
-            ['total', 1],
+            ['total', 1], // force fullSync and single item
         ]);
         $this->inputMock->method('getArgument')->willReturnMap([
             ['version', null],
@@ -186,13 +203,24 @@ final class IndexCommandTest extends UnitTestCase
 
         $this->subject->callInitialize($this->inputMock, $this->outputMock);
 
-        // ES client dummy for index creation/alias updates
+        // ES client dummy for index creation/alias updates and safe alias cleanup
         $clientForFullSync = new class {
             public function indices()
             {
                 return new class {
                     public function create(array $params): void {}
                     public function updateAliases(array $params): void {}
+                    public function getAlias(array $params)
+                    {
+                        // Provide expected structure to avoid accidental failures beyond rate limit path
+                        return new class {
+                            public function asArray(): array
+                            {
+                                return [];
+                            }
+                        };
+                    }
+                    public function delete(array $params): void {}
                 };
             }
             public function bulk(array $params = [])
@@ -225,22 +253,34 @@ final class IndexCommandTest extends UnitTestCase
         $zoteroMock->method('setStyle')->willReturn($zoteroMock);
         $zoteroMock->method('setLinkwrap')->willReturn($zoteroMock);
         $zoteroMock->method('setLocale')->willReturn($zoteroMock);
-        $zoteroMock->method('send')->will($this->onConsecutiveCalls(
-            $preflightResponse,
-            $this->throwException($rateLimitException),
-            $this->throwException($rateLimitException),
-            $this->throwException($rateLimitException),
-            $this->throwException($rateLimitException),
-            $this->throwException($rateLimitException)
-        ));
-        GeneralUtility::addInstance(ZoteroApi::class, $zoteroMock);
+
+        // Stable simulation: first call returns preflight, all subsequent calls throw 429
+        $callCount = 0;
+        $zoteroMock->method('send')->willReturnCallback(function () use (&$callCount, $preflightResponse, $rateLimitException) {
+            if ($callCount === 0) {
+                $callCount++;
+                return $preflightResponse;
+            }
+            $callCount++;
+            throw $rateLimitException;
+        });
+
+        // Inject ZoteroApi mock directly into the proxy
+        $this->subject->setZoteroApi($zoteroMock);
 
         // fullSync expects collectionIds; set minimal [null]
         $this->subject->setCollectionIds(new Collection([null]));
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Rate limit retry budget exceeded.');
+        // Expect a clear log entry about rate limit budget exceed
+        $this->loggerMock
+            ->expects($this->once())
+            ->method('error')
+            ->with(
+                $this->stringContains('Rate limit retry budget exceeded'),
+                $this->anything()
+            );
 
+        $this->expectException(Exception::class);
         $this->subject->callFullSync();
     }
 }
