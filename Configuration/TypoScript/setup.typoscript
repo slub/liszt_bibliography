@@ -3,28 +3,13 @@
 ######################
 #<INCLUDE_TYPOSCRIPT: source="FILE:EXT:liszt_common/Configuration/TypoScript/setup.typoscript">
 
-/*lib.contentElement {
-    #layoutRootPaths {
-        #200 = EXT:liszt_bibliography:Resources/Private/Layouts
-    #}
-    #partialRootPaths {
-        #200 = EXT:liszt_bibliography:Resources/Private/Partial
-    #}
-    templateRootPaths {
-        200 = EXT:liszt_bibliography/Resources/Private/Templates
-    }
-}*/
-
-/*tt_content {
-    lisztbibliography_listing =< lib.contentElement
-    lisztbibliography_listing {
-        templateName = BibliographyListing
-    }
-}*/
-
-# page.includeJSFooter.BibliographyController = EXT:liszt_bibliography/Resources/Public/JavaScript/Src/BibliographyController.js
-
+# settings for searchResults in liszt_common
 plugin.tx_lisztcommon_searchlisting {
+  view {
+    partialRootPaths {
+      30 = EXT:liszt_bibliography/Resources/Private/Partials/
+      }
+    }
   settings {
     entityTypes {
       1 {
@@ -34,38 +19,119 @@ plugin.tx_lisztcommon_searchlisting {
         extensionName = liszt_bibliography
         # the name of the entity index
         indexName = zotero
+        # the filename of the language file for translations in /Resources/Private/Language/ of the extension
+        languageFile = bibliographylang
+        # select stands for the type of selection like multipe selects in one Facette or date range
+        # select = multi, select = range
+        # size is the number of facet items shown, default = defaultFilterSize = 10
+        defaultFilterSize = 10
+        # sort results if non fulltextsearch is processed (if not sorted by relevance)
+        defaultSortBy = tx_lisztbibliography_year
+        defaultSortDirection = desc
+        # IMPORTANT: key\.keyword is required as the final sort field for proper detail page navigation
+        # - Multiple documents can have identical tx_lisztbibliography_year and dateAdded values
+        # - Without a unique tiebreaker field, search_after pagination fails when navigating between detail pages
+        # - Text fields require the .keyword subfield for sorting in Elasticsearch
+        # - The backslash escapes the dot to prevent TypoScript from interpreting it as object notation
+
+        sortings {
+          0 {
+            label = sort_date_desc
+            fields {
+              tx_lisztbibliography_year = desc
+              dateAdded = desc
+              key\.keyword = desc
+              }
+            default = true
+          }
+          1 {
+          label = sort_date_asc
+          fields {
+            tx_lisztbibliography_year = asc
+            dateAdded = asc
+            # Unique tiebreaker to ensure stable sorting and proper detail page navigation
+            key\.keyword = asc
+          }
+          }
+          2 {
+          label = sort_relevance
+          fields {
+            _score = desc
+            tx_lisztbibliography_year = desc
+            dateAdded = desc
+            key\.keyword = desc
+          }
+          fulltext = true
+          defaultFulltext = true
+          }
+        }
+        # maxSize is the number of items loaded and hidden for "display more" button
+        # sortByKey is an option to sort the filter items, possible values are: slub (for slub-style sorting in viewhelper) or elastic (for sort in elastic aggs options)
         # the filter fields
         filters {
           0 {
             field = itemType
-            type = terms
+            type = keyword
+            select = multi
           }
           1 {
-            field = place
-            type = terms
+            field = tx_lisztbibliography_authors
+            type = nested
+            key = fullName
+            select = multi
+            size = 8
+            maxSize = 30
           }
           2 {
-            field = date
-            type = terms
+            field = tx_lisztbibliography_editors
+            type = nested
+            key = fullName
+            select = multi
+            size = 8
+            maxSize = 30
           }
           3 {
-            field = publicationTitle
-            type = terms
+            field = tx_lisztbibliography_year
+            type = short
+            select = range
+
           }
           4 {
-            field = creators
-            type = nested
-            script (
-              String firstName = doc['creators.firstName.keyword'].size() > 0 ? doc['creators.firstName.keyword'].value : '';
-              String lastName = doc['creators.lastName.keyword'].size() > 0 ? doc['creators.lastName.keyword'].value : '';
-              if (firstName == '' && lastName == '') {
-                  return null;
-              }
-              return (firstName + ' ' + lastName).trim();
-            )
+            field = language
+            type = keyword
+            select = multi
+            size = 5
+            maxSize = 30
+          }
+          5 {
+            field = publicationTitle
+            type = terms
+            select = multi
+            size = 6
+            maxSize = 30
           }
         }
       }
     }
   }
 }
+
+
+//same settings for htmxfilters Plugin as for searchlisting Plugin
+plugin.tx_lisztcommon_htmxfilters.settings < plugin.tx_lisztcommon_searchlisting.settings
+
+# settings for search detail Page in liszt_common
+plugin.tx_lisztcommon_searchdetails {
+  settings {
+      # the filename of the language file for translations in /Resources/Private/Language/ of the extension
+      languageFile = bibliographylang
+      extensionName = liszt_bibliography
+      # the template path to detail view of liszt_common search controller detail action
+      detailTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/Details.html
+      detailHeaderTemplatePath = EXT:liszt_bibliography/Resources/Private/Templates/DetailsHeader.html
+      # we need entityTypes for query generation on detail pages navigation
+     entityTypes < plugin.tx_lisztcommon_searchlisting.settings.entityTypes
+  }
+}
+plugin.tx_lisztcommon_searchdetailsheader.settings < plugin.tx_lisztcommon_searchdetails.settings
+

@@ -18,3 +18,9 @@ zoteroLocale = de-DE,en-US
 zoteroStyle = technische-universitat-dresden-historische-musikwissenschaft-note
 # cat=Zotero; type=int; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroLinkwrap
 zoteroLinkwrap = 1
+# cat=Zotero; type=string; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.zoteroCollectionId
+zoteroCollectionId = A8MKMVFD, URC5G9EI
+# cat=Zotero; type=string; label=LLL:EXT:liszt_zotero/Resources/Private/Language/Labels.xml:config.collectionToItemTypeMap
+collectionToItemTypeMap = {"URC5G9EI":"printedMusic"}
+# cat=Zotero; type=options[INFO=0, WARNING=1, ERROR=2]; label=LLL:EXT:liszt_zotero/Resources/Private/Language/locallang.xlf:logLevel
+logLevel = 2

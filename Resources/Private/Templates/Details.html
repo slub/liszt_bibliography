@@ -1,0 +1,117 @@
+{namespace lc=Slub\LisztCommon\ViewHelpers}
+<html
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:i="http://typo3.org/ns/Quellenform/Iconpack/ViewHelpers"
+    xmlns:lb="http://typo3.org/ns/Slub/LisztBibliography/ViewHelpers"
+    data-namespace-typo3-fluid="true">
+<f:variable name="languageFilePath">LLL:EXT:{settings.extensionName}/Resources/Private/Language/{settings.languageFile}.xlf</f:variable>
+<f:render partial="DetailBreadcrumb" arguments="{_all}" />
+<main role="main" id="page-content">
+<div class="container-xl sidebar-left grid grid-3col-md searchdetail">
+<f:if condition="{ElasticSearchServiceError} != ''">
+<f:then>
+<div class="content grid-colspan-md-2">
+    <div class="alert" role="alert">
+        {ElasticSearchServiceError}
+    </div>
+</div>
+</f:then>
+<f:else>
+<aside class="sidebar">
+    <div class="frame frame-small-mb">
+        <h3 class="searchdetail-itemtype">
+        <span class="searchdetail-itemtype-icon"><i:icon iconfig="{lc:ItemTypeIconName(iconPackKey: 'lziconsr', itemType: searchResult._source.itemType)}" preferredRenderTypes="svgSprite" additionalAttributes="{aria-hidden:'true'}" /></span>
+        <span class="searchdetail-itemtype-title">{f:translate(key: '{languageFilePath}:itemType_{searchResult._source.itemType}', default: '{searchResult._source.itemType}')}</span>
+        </h3>
+    </div>
+</aside>
+<div class="content grid-colspan-md-2">
+    <div class="frame">
+        <dl class="searchdetail-list">
+            <div>
+            <dt>{f:translate(key: '{languageFilePath}:title', default: 'title')}</dt>
+            <dd>{searchResult._source.title}</dd>
+            </div>
+            <div>
+                <dt>{f:translate(key: '{languageFilePath}:tx_lisztbibliography_creators', default: 'tx_lisztbibliography_creators')}</dt>
+                <dd>
+                    <f:if condition="{searchResult._source.creators}">
+                        <f:then>
+                            <ul class="no-list-style">
+                                <f:for each="{searchResult._source.creators}" as="creator">
+                                    <f:if condition="{creator.creatorType} != 'editor' || ({searchResult._source.itemType} != 'journalArticle' && {searchResult._source.itemType} != 'bookSection' && {searchResult._source.itemType} != 'encyclopediaArticle')">
+                                        <li>
+                                            <f:if condition="{creator.name}">
+                                                {creator.name}
+                                            </f:if>
+                                            <f:if condition="{creator.firstName}">
+                                                {creator.firstName}
+                                            </f:if>
+                                            <f:if condition="{creator.lastName}">
+                                                {creator.lastName}
+                                            </f:if>
+                                            <f:if condition="{creator.creatorType}">
+                                                (<span>{f:translate(key: '{languageFilePath}:{creator.creatorType}', default: '{creator.creatorType}')}</span>)
+                                            </f:if>
+                                        </li>
+                                    </f:if>
+                                </f:for>
+                            </ul>
+                        </f:then>
+                        <f:else>
+                            <p>No Creators found.</p>
+                        </f:else>
+                    </f:if>
+                </dd>
+            </div>
+            <f:if condition="{searchResult._source.itemType} == 'book' || {searchResult._source.itemType} == 'printedMusic' || {searchResult._source.itemType} == thesis">
+                <f:variable name="publishedText" value="{lb:publishedText(values: searchResult._source)}" />
+                <f:if condition="{publishedText}">
+                    <div>
+                        <dt>{f:translate(key: '{languageFilePath}:published', default: 'published')}</dt>
+                        <dd>{publishedText}</dd>
+                    </div>
+                </f:if>
+            </f:if>
+
+            <f:variable name="publishedInText" value="{lb:publishedInText(values: searchResult._source)}" />
+            <f:if condition="{publishedInText}">
+                <f:if condition="{searchResult._source.itemType} == book">
+                    <f:then>
+                            <div>
+                                <dt>{f:translate(key: '{languageFilePath}:series', default: 'series')}</dt>
+                                <dd>{publishedInText}</dd>
+                            </div>
+                    </f:then>
+                    <f:else>
+                        <div>
+                            <dt>{f:translate(key: '{languageFilePath}:publishedIn', default: 'publishedIn')}</dt>
+                            <dd>{publishedInText}</dd>
+                        </div>
+                    </f:else>
+                </f:if>
+            </f:if>
+
+            <f:if condition="{searchResult._source.itemType} == thesis && {searchResult._source.pages}">
+                <div>
+                    <dt>{f:translate(key: '{languageFilePath}:pages', default: 'pages')}</dt>
+                    <dd>{searchResult._source.pages}</dd>
+                </div>
+            </f:if>
+
+            <div>
+                <dt>{f:translate(key: '{languageFilePath}:language', default: 'language')}</dt>
+                <dd>{searchResult._source.language}</dd>
+            </div>
+
+        </dl>
+        <f:if condition="{searchContext.navigation}">
+            <f:render partial="DetailPageNavigation" arguments="{detailPageId: detailPageId, searchContext: searchContext, searchPageId: searchPageId, detailId: detailId }" />
+        </f:if>
+    </div>
+</div>
+</f:else>
+</f:if>
+</div>
+</main>
+

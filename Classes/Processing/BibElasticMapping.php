@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace Slub\LisztBibliography\Processing;
 
-// create a field "fulltext" and copy content of "tx_lisztcommon_searchable" to fulltext
+// the Extension ICU analyzer must be installed in Elasticsearch
+// field "fulltext" with ICU analyzer for improved text search
+// Supports transliteration (e.g., здравствуйте -> zdravstvujte)
+// and normalization (e.g., straße -> strasse, Kornél -> Kornel)
 
 class BibElasticMapping
 {
@@ -12,20 +15,69 @@ class BibElasticMapping
         return [
             'index' => $index,
             'body' => [
+                'settings' => [
+                    'analysis' => [
+                        'analyzer' => [
+                            'icu_fulltext_analyzer' => [
+                                'type' => 'custom',
+                                'tokenizer' => 'icu_tokenizer',
+                                'filter' => [
+                                    'icu_folding',
+                                    'icu_normalizer',
+                                    'icu_transform',
+                                    'lowercase',
+                                    'synonym_filter',
+                                    'stop'
+                                ]
+                            ],
+                            'icu_search_analyzer' => [
+                                'type' => 'custom',
+                                'tokenizer' => 'icu_tokenizer',
+                                'filter' => [
+                                    'icu_folding',
+                                    'icu_normalizer',
+                                    'icu_transform',
+                                    'lowercase',
+                                    'synonym_filter',
+                                ]
+                            ]
+                        ],
+                        'filter' => [
+                            'icu_transform' => [
+                                'type' => 'icu_transform',
+                                'id' => 'Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC'
+                            ],
+                            'synonym_filter' => [
+                                'type' => 'synonym',
+                                'lenient' => true,
+                                'synonyms' => [
+                                    'Liszt, Lißt, Lisst, Listz'
+                                ]
+                            ]
+                        ],
+                    ]
+                ],
                 'mappings' => [
                     'dynamic' => false,
                     'properties' => [
+                        'key' => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256] ] ],
+                        'itemType' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'version' => [ 'type' => 'long' ],
-                        'title' => [ 'type' => 'text'],
+                        'title' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
+                        'shortTitle' => [ 'type' => 'text'],
                         'university' => [ 'type' => 'text'],
                         'bookTitle' => [ 'type' => 'text'],
                         'series' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
+                        'seriesNumber' => [ 'type' => 'text'],
+                        'pages' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
+                        'volume' => [ 'type' => 'text'],
                         'publicationTitle' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
+                        'language' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'place' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'date' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
+                        'dateAdded' => [ 'type' => 'date' ],
                         'archiveLocation' => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
-                        'itemType' => [ 'type' => 'keyword'],
-                        'journalTitle'  => [ 'type' => 'keyword'],
+                        'journalTitle'  => [ 'type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword', 'ignore_above' => 256 ] ] ],
                         'creators' => [
                             'type' => 'nested',
                             'properties' => [
@@ -39,7 +91,6 @@ class BibElasticMapping
                                             'type' => 'keyword', 'ignore_above' => 256
                                         ],
                                     ],
-                                    'copy_to' => 'creators.fullName'
                                 ],
                                 'lastName' => [
                                     'type' => 'text',
@@ -48,17 +99,59 @@ class BibElasticMapping
                                             'type' => 'keyword', 'ignore_above' => 256
                                         ]
                                     ],
-                                    'copy_to' => 'creators.fullName'
                                 ],
-                                'fullName' => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
+                                'name' => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ]
+                                    ],
+                                ],
+                                BibEntryProcessor::FULLNAME_KEY => ['type' => 'text', 'fields' => [ 'keyword' => [ 'type' => 'keyword'] ] ],
                             ]
                         ],
-                        'fulltext' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_header' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_body' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_footer' => [ 'type' => 'text' ],
-                        'tx_lisztcommon_searchable' => ['type' => 'text', 'copy_to' => 'fulltext'],
-                        'tx_lisztcommon_boosted' => ['type' => 'text'],
+                        'fulltext' => [
+                            'type' => 'text',
+                            'analyzer' => 'icu_fulltext_analyzer',
+                            'search_analyzer' => 'icu_search_analyzer',
+                            'fields' => [
+                                'raw' => [
+                                    'type' => 'text',
+                                    'analyzer' => 'standard'
+                                ]
+                            ]
+                        ],
+                        BibEntryProcessor::SEARCHABLE_FIELD => ['type' => 'text', 'copy_to' => 'fulltext'],
+                        BibEntryProcessor::BOOSTED_FIELD => ['type' => 'text'],
+                        BibEntryProcessor::AUTHORS_FIELD => [
+                            'type' => 'nested',
+                            'properties' => [
+                                BibEntryProcessor::FULLNAME_KEY => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ],
+                                    ],
+                                ],
+                            ]
+                        ],
+                        BibEntryProcessor::EDITORS_FIELD => [
+                            'type' => 'nested',
+                            'properties' => [
+                                BibEntryProcessor::FULLNAME_KEY => [
+                                    'type' => 'text',
+                                    'fields' => [
+                                        'keyword' => [
+                                            'type' => 'keyword', 'ignore_above' => 256
+                                        ],
+                                    ],
+                                ],
+                            ]
+                        ],
+                        BibEntryProcessor::YEAR_FIELD => [ 'type' => 'short' ],
+                        BibEntryProcessor::ORIGINAL_ITEM_TYPE => [ 'type' => 'text'],
                     ]
                 ]
             ]

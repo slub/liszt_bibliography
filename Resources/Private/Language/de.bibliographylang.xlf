@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+    <file source-language="en" datatype="plaintext" original="EXT:liszt_bibliography/Resources/Private/Language/bibliographylang.xlf" date="2025-01-14T13:20:31Z" product-name="liszt_bibliography">
+        <header/>
+        <body>
+            <trans-unit id="itemType" >
+                <source>Medientyp</source>
+            </trans-unit>
+			<trans-unit id="title" >
+				<source>Titel</source>
+			</trans-unit>
+			<trans-unit id="shortTitle" >
+				<source>Kurztitel</source>
+			</trans-unit>
+			<trans-unit id="tx_lisztbibliography_creators" >
+				<source>Beteiligte</source>
+			</trans-unit>
+			<trans-unit id="tx_lisztbibliography_authors" >
+				<source>Autor:innen</source>
+			</trans-unit>
+			<trans-unit id="tx_lisztbibliography_editors" >
+				<source>Herausgeber:innen</source>
+			</trans-unit>
+			<trans-unit id="date" >
+				<source>Datum</source>
+			</trans-unit>
+			<trans-unit id="tx_lisztbibliography_year" >
+				<source>Datum</source>
+			</trans-unit>
+			<trans-unit id="language" >
+				<source>Sprache</source>
+			</trans-unit>
+			<trans-unit id="published" >
+				<source>Erschienen</source>
+			</trans-unit>
+			<trans-unit id="pages" >
+				<source>Umfang</source>
+			</trans-unit>
+			<trans-unit id="publishedIn" >
+				<source>Erschienen in</source>
+			</trans-unit>
+			<trans-unit id="series" >
+				<source>Reihe</source>
+			</trans-unit>
+			<trans-unit id="publishedInShort" >
+				<source>in</source>
+			</trans-unit>
+			<trans-unit id="author" >
+				<source>Verfasser:in</source>
+			</trans-unit>
+			<trans-unit id="editor" >
+				<source>Herausgeber:in</source>
+			</trans-unit>
+			<trans-unit id="translator" >
+				<source>Übersetzer:in</source>
+			</trans-unit>
+			<trans-unit id="seriesEditor" >
+				<source>Serienherausgeber:in</source>
+			</trans-unit>
+			<trans-unit id="bookAuthor" >
+				<source>Buchautor:in</source>
+			</trans-unit>
+			<trans-unit id="contributor" >
+				<source>Beteiligte:r</source>
+			</trans-unit>
+			<trans-unit id="publicationTitle" >
+				<source>Journaltitel</source>
+			</trans-unit>
+			<trans-unit id="volume_abbreviation" >
+				<source>Band</source>
+			</trans-unit>
+			<trans-unit id="itemType_book" >
+				<source>Buch</source>
+			</trans-unit>
+			<trans-unit id="itemType_printedMusic" >
+				<source>Musikalie</source>
+			</trans-unit>
+			<trans-unit id="itemType_journalArticle" >
+				<source>Zeitschriftenartikel</source>
+			</trans-unit>
+			<trans-unit id="itemType_bookSection" >
+				<source>Buchkapitel</source>
+			</trans-unit>
+			<trans-unit id="itemType_thesis" >
+				<source>Dissertation</source>
+			</trans-unit>
+			<trans-unit id="itemType_attachment" >
+				<source>Anhang</source>
+			</trans-unit>
+			<trans-unit id="itemType_webpage" >
+				<source>Webseite</source>
+			</trans-unit>
+			<trans-unit id="itemType_encyclopediaArticle" >
+				<source>Enzyklopädieartikel</source>
+			</trans-unit>
+			<trans-unit id="sort_date_desc">
+				<source>Datum absteigend</source>
+			</trans-unit>
+			<trans-unit id="sort_date_asc">
+				<source>Datum aufsteigend</source>
+			</trans-unit>
+			<trans-unit id="sort_relevance">
+				<source>Relevanz</source>
+			</trans-unit>
+        </body>
+    </file>
+</xliff>
