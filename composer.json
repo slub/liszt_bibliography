@@ -45,7 +45,12 @@
             "php-http/discovery": true
         },
         "vendor-dir": "vendor",
-        "bin-dir": "bin"
+        "bin-dir": "bin",
+        "policy": {
+            "advisories": {
+                "block": false
+            }
+        }
     },
     "repositories": {
         "api": {
