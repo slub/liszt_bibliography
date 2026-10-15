@@ -16,6 +16,7 @@ class BibElasticMapping
             'index' => $index,
             'body' => [
                 'settings' => [
+                    'number_of_replicas' => 0,
                     'analysis' => [
                         'analyzer' => [
                             'icu_fulltext_analyzer' => [
