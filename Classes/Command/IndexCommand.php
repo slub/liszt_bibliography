@@ -339,7 +339,16 @@ class IndexCommand extends Command
       //  $this->fetchCitations($cursor, $version);
       //  $this->fetchTeiData($cursor, $version);
         $this->buildDataSets();
-        $this->commitBibliography();
+        $this->commitBibliography($this->getTargetIndex($version));
+    }
+
+    // a full sync fills the new index, an incremental sync updates the live index
+    protected function getTargetIndex(int $version): string
+    {
+        if ($version == 0) {
+            return $this->indexName;
+        }
+        return $this->extConf['elasticIndexName'];
     }
 
     protected function getVersion(): int
@@ -476,7 +485,7 @@ class IndexCommand extends Command
             });
     }
 
-    protected function commitBibliography(): void
+    protected function commitBibliography(string $targetIndex): void
     {
         if ($this->dataSets->count() == 0) {
             $this->io->text('no new bibliographic entries');
@@ -489,7 +498,7 @@ class IndexCommand extends Command
         foreach ($this->dataSets as $document) {
             $params['body'][] = [
                 'index' => [
-                    '_index' => $this->indexName,
+                    '_index' => $targetIndex,
                     '_id' => $document['key']
                 ]
             ];
